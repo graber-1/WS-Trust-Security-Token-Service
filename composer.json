@@ -1,0 +1,8 @@
+{
+    "name": "graber/agiv_sts",
+    "description": "Agiv STS authorization library",
+    "minimum-stability": "dev",
+    "require": {
+        "composer/installers": "~1.0"
+    }
+}
