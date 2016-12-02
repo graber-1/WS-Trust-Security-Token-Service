@@ -4,6 +4,7 @@ namespace AgivSTS;
 
 use DOMDocument;
 use DOMElement;
+use DOMXpath;
 
 /**
  * Base class for Agiv STS library.
@@ -24,6 +25,25 @@ abstract class AgivSTSBase {
 
   // Xml DOMDocument Object.
   protected $xml;
+
+  /**
+   * General constructor.
+   */
+  public function __construct($data) {
+    // Set object properties.
+    foreach ($this as $property => $value) {
+      if (!empty($data[$property])) {
+        $this->$property = $data[$property];
+      }
+    }
+  }
+
+  /**
+   * Output xml as a string.
+   */
+  public function xmlOutput() {
+    return $this->xml->saveXML();
+  }
 
   /**
    * Prepare element.
@@ -51,20 +71,6 @@ abstract class AgivSTSBase {
       throw new \Exception(sprintf('Namespace "%s" is not defined.', $namespace));
     }
 
-    // Add additional namespaces if present.
-    foreach ($namespaces as $namespace) {
-      if (self::XMLNS[$namespace] !== NULL) {
-        $ns_name = 'xmlns';
-        if (!empty($namespace)) {
-          $ns_name .= ':' . $namespace;
-        }
-        $element->setAttributeNS('http://www.w3.org/2000/xmlns/', $ns_name, self::XMLNS[$namespace]);
-      }
-      else {
-        throw new \Exception(sprintf('Namespace "%s" is not defined.', $namespace));
-      }
-    }
-
     // Add attributes.
     foreach ($attributes as $attribute => $value) {
       if (($pos = strpos($attribute, ':')) !== FALSE) {
@@ -79,8 +85,22 @@ abstract class AgivSTSBase {
       else {
         $element->setAttribute($attribute, $value);
       }
-
     }
+
+    // Add additional namespaces if present.
+    foreach ($namespaces as $namespace) {
+      if (self::XMLNS[$namespace] !== NULL) {
+        $ns_name = 'xmlns';
+        if (!empty($namespace)) {
+          $ns_name .= ':' . $namespace;
+        }
+        $element->setAttributeNS('http://www.w3.org/2000/xmlns/', $ns_name, self::XMLNS[$namespace]);
+      }
+      else {
+        throw new \Exception(sprintf('Namespace "%s" is not defined.', $namespace));
+      }
+    }
+
     return $element;
   }
 
@@ -166,6 +186,41 @@ abstract class AgivSTSBase {
 
     return $guid;
   }
+
+  /**
+   * Parse xml response: error handling.
+   */
+  protected function checkResponse() {
+    $fault = $this->xml->getElementsByTagNameNS(self::XMLNS['s'], 'Fault')->item(0);
+    if (!empty($fault)) {
+      $error_data = [
+        'reason' => 's:Reason/s:Text',
+        'code' => 's:Code/s:Value',
+        'subcode' => 's:Code/s:Subcode/s:Value',
+      ];
+
+      $xpath = new DOMXpath($this->xml);
+      foreach ($error_data as $key => $query) {
+        $result = $xpath->query($query, $fault);
+        if ($result->length) {
+          $error_data[$key] = (string) $result->item(0)->nodeValue;
+        }
+        else {
+          $error_data[$key] = 'not provided';
+        }
+      }
+      array_unshift($error_data, get_class($this));
+      throw new \Exception(vsprintf('%s error: %s Code: %s, subcode: %s.', $error_data));
+    }
+    return TRUE;
+  }
+
+}
+
+/**
+ * Base class for service document.
+ */
+abstract class ServiceDocument extends AgivSTSBase {
 
   /**
    * Prepare base XML elements.

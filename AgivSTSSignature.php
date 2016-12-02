@@ -22,6 +22,7 @@ class AgivSTSSignature extends AgivSTSBase {
   const SHA512 = 'http://www.w3.org/2001/04/xmlenc#sha512';
   const RIPEMD160 = 'http://www.w3.org/2001/04/xmlenc#ripemd160';
   const RSA_SHA1 = 'http://www.w3.org/2000/09/xmldsig#rsa-sha1';
+  const HMAC_SHA1 = 'http://www.w3.org/2000/09/xmldsig#hmac-sha1';
 
   // Canonicalization methods.
   const C14N = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
@@ -76,8 +77,7 @@ class AgivSTSSignature extends AgivSTSBase {
   /**
    * Sign document base function.
    */
-  public function signDocument($element, $key_info = FALSE) {
-
+  public function signDocument($element, $key_info = FALSE, $method = self::RSA_SHA1, $parameters = array()) {
     // Add certificate.
     if (!empty($this->certPath)) {
       $this->addXmlElementNs($element, 'o', 'o:BinarySecurityToken', $this->getCertificateData($this->certPath), [
@@ -122,7 +122,7 @@ class AgivSTSSignature extends AgivSTSBase {
     }
 
     // Add signature value.
-    $this->addXmlElementNs($signature, '', 'SignatureValue', $this->getSignatureValue($signed_info));
+    $this->addXmlElementNs($signature, '', 'SignatureValue', $this->getSignatureValue($signed_info, $method, $parameters));
 
     // Add security key (certificate) info.
     if (!empty($this->certPath) || $key_info !== FALSE) {
@@ -203,21 +203,35 @@ class AgivSTSSignature extends AgivSTSBase {
   /**
    * Get signature value.
    */
-  protected function getSignatureValue($sigInfoElement) {
+  protected function getSignatureValue($sigInfoElement, $method, $parameters) {
     $data = $sigInfoElement->C14N(TRUE, FALSE);
 
-    if (!empty($this->pkPath)) {
-      $pk_string = file_get_contents($this->pkPath);
-      $private_key = openssl_pkey_get_private($pk_string, $this->passphrase);
+    switch ($method) {
+      case self::RSA_SHA1:
+        $pk_string = file_get_contents($this->pkPath);
+        $private_key = openssl_pkey_get_private($pk_string, $this->passphrase);
 
-      if (!openssl_sign($data, $signature, $private_key, OPENSSL_ALGO_SHA1)) {
-        throw new \Exception('Failure Signing Data: ' . openssl_error_string() . ' - ' . OPENSSL_ALGO_SHA1);
-      }
-      openssl_free_key($private_key);
-      $signature = base64_encode($signature);
-    }
-    else {
-      $signature = $this->calculateDigest(self::SHA1, $data);
+        if (!openssl_sign($data, $signature, $private_key, OPENSSL_ALGO_SHA1)) {
+          throw new \Exception('Failure Signing Data: ' . openssl_error_string() . ' - ' . OPENSSL_ALGO_SHA1);
+        }
+        openssl_free_key($private_key);
+        $signature = base64_encode($signature);
+        break;
+
+      case self::HMAC_SHA1:
+        if (!isset($parameters['secret'])) {
+          $parameters['secret'] = '';
+        }
+        //kdpm($data);
+        //kdpm($parameters['secret']);
+        $parameters['secret'] = base64_decode($parameters['secret']);
+        $hmac = hash_hmac('sha1', $data, $parameters['secret'], TRUE);
+        $signature = base64_encode($hmac);
+        //kdpm($signature);
+        break;
+
+      default:
+        throw new \Exception(sprintf('Failure Signing Data: method %s not supported.', $method));
     }
 
     return $signature;
@@ -317,17 +331,5 @@ class AgivSTSSignature extends AgivSTSBase {
   public static function alphaSort($x, $y) {
     return strcasecmp($x['sort_name'], $y['sort_name']);
   }
-
-  // Must declare required methods..
-
-  /**
-   * Prepare document header.
-   */
-  protected function prepareXmlHeader(DOMElement $header) {}
-
-  /**
-   * Prepare document body.
-   */
-  protected function prepareXmlBody(DOMElement $body) {}
 
 }

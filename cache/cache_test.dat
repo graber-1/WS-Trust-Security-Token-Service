@@ -1,5 +1,4 @@
-a:2:{s:8:"lifetime";a:2:{s:7:"Created";i:2480416726;s:7:"Expires";i:2480416726;}s:3:"xml";s:15800:"<?xml version="1.0"?>
-<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+a:2:{s:8:"lifetime";a:2:{s:7:"Created";i:2480588329;s:7:"Expires";i:2480591929;}s:3:"xml";s:16602:"<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
   <s:Header>
     <a:Action s:mustUnderstand="1">http://docs.oasis-open.org/ws-sx/ws-trust/200512/RSTRC/IssueFinal</a:Action>
     <a:RelatesTo>urn:uuid:a4e8ff1b-2257-4b51-84c4-221d232cd6be</a:RelatesTo>

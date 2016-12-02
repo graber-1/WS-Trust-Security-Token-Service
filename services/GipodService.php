@@ -7,7 +7,7 @@ require_once __DIR__ . '/../AgivSecurityToken.php';
 require_once __DIR__ . '/../AgivSTSSignature.php';
 require_once __DIR__ . '/../../../guzzlehttp/guzzle/src/Client.php';
 
-use AgivSTS\AgivSTSBase;
+use AgivSTS\ServiceDocument;
 use AgivSTS\AgivSecurityToken;
 use AgivSTS\AgivSTSSignature;
 use DOMDocument;
@@ -17,7 +17,7 @@ use GuzzleHttp\Client;
 /**
  * Class for accessing Gipod webAPI.
  */
-class GipodService extends AgivSTSBase {
+class GipodService extends ServiceDocument {
 
   const CONSTRUCTOR_DEFAULTS = [
     'action' => 'GetListLocatieHinder',
@@ -52,24 +52,18 @@ class GipodService extends AgivSTSBase {
       }
     }
 
-    // Set object variables.
-    foreach ([
-      'action',
-      'url',
-      'certPath',
-      'pkPath',
-    ] as $key) {
-      if (!empty($data[$key])) {
-        $this->{$key} = $data[$key];
-      }
-    }
+    parent::__construct($data);
 
     // Check if all required values are provided.
     $this->validateVariables();
 
     // Get security token.
-    $this->agivSecurityToken = new AgivSecurityToken($data);
-    $this->agivSecurityToken->load();
+    $this->agivSecurityToken = new AgivSecurityToken([
+      'pkPath' => $this->pkPath,
+      'certPath' => $this->certPath,
+      'realm' => 'urn:agiv.be/gipod',
+    ]);
+    $this->agivSecurityToken->load('gipod');
   }
 
   /**
@@ -121,10 +115,16 @@ class GipodService extends AgivSTSBase {
 
     try {
       $response = $client->post($this->url, $options);
-      kdpm((string) $response->getBody());
+      $response_str = (string) $response->getBody();
     }
     catch (\Exception $e) {
-      kdpm((string) $e->getResponse()->getBody());
+      $response_str = $e->getResponse()->getBody();
+    }
+
+    $this->xml->loadXML($response_str);
+    if ($this->checkResponse()) {
+      kdpm('success');
+      return $this->xml;
     }
   }
 
@@ -195,7 +195,8 @@ class GipodService extends AgivSTSBase {
     $params = [
       'xml' => $this->xml,
       'signatureElements' => $this->signatureElements,
-      'canonicalMethod' => AgivSTSSignature::EXC_C14N
+      'canonicalMethod' => AgivSTSSignature::EXC_C14N,
+      'pkPath' => $this->pkPath,
     ];
 
     $sigObject = new AgivSTSSignature($params);
@@ -203,7 +204,9 @@ class GipodService extends AgivSTSBase {
     $reference = $this->agivSecurityToken->getReference();
     $importedReference = $this->xml->importNode($reference, TRUE);
 
-    $sigObject->signDocument($this->securityHeader, $importedReference);
+    $secret = $this->agivSecurityToken->getBinarySecret();
+
+    $sigObject->signDocument($this->securityHeader, $importedReference, AgivSTSSignature::HMAC_SHA1, ['secret' => $secret]);
   }
 
 }

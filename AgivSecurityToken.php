@@ -8,12 +8,11 @@ require_once __DIR__ . '/AgivSTSRequest.php';
 use GuzzleHttp\Client;
 use SimpleXMLElement;
 use DOMDocument;
-use DOMXpath;
 
 /**
  * The security token class.
  */
-class AgivSecurityToken {
+class AgivSecurityToken extends AgivSTSBase {
 
   protected $pkPath;
   protected $certPath;
@@ -22,7 +21,6 @@ class AgivSecurityToken {
   protected $passphrase;
 
   protected $xml;
-  protected $xpath;
 
   protected $lifetime;
 
@@ -71,7 +69,6 @@ class AgivSecurityToken {
     }
 
     $this->xml = new DOMDocument();
-    $this->xpath = new DOMXpath($this->xml);
   }
 
   /**
@@ -80,7 +77,7 @@ class AgivSecurityToken {
   public function load($cache_id = '') {
     if (!$this->cacheGet($cache_id)) {
       if ($this->requestToken()) {
-        $this->cacheSet();
+        $this->cacheSet($cache_id);
       }
     }
   }
@@ -109,11 +106,16 @@ class AgivSecurityToken {
 
     try {
       $response = $client->post($this->url, $options);
-      return $this->parseResponse((string) $response->getBody());
+      $response_str = (string) $response->getBody();
     }
     catch (\Exception $e) {
-      $xml = (string) $e->getResponse()->getBody();
-      $this->parseResponse($xml);
+      $response_str = (string) $e->getResponse()->getBody();
+    }
+
+    $this->xml->loadXML($response_str);
+    if ($this->checkResponse()) {
+      $this->parseResponse();
+      return TRUE;
     }
 
   }
@@ -121,41 +123,15 @@ class AgivSecurityToken {
   /**
    * Parse xml response.
    */
-  private function parseResponse($response) {
-    $this->xml->loadXML($response);
-
-    // Error handling.
-    $fault = $this->xml->getElementsByTagNameNS(self::XMLNS['s'], 'Fault')->item(0);
-    if (!empty($fault)) {
-      $error_data = [
-        'reason' => 's:Reason/s:Text',
-        'code' => 's:Code/s:Value',
-        'subcode' => 's:Code/s:Subcode/s:Value',
-      ];
-
-      foreach ($error_data as $key => $query) {
-        $result = $this->xpath->query($query, $fault);
-        if ($result->length) {
-          $error_data[$key] = (string) $result->item(0)->nodeValue;
-        }
-        else {
-          $error_data[$key] = 'not provided';
-        }
+  protected function parseResponse() {
+    $this->lifetime = [];
+    $lifetime = $this->xml->getElementsByTagNameNS(self::XMLNS['trust'], 'Lifetime');
+    if ($lifetime->length) {
+      foreach ($lifetime->item(0)->childNodes as $node) {
+        $this->lifetime[$node->localName] = strtotime(substr($node->nodeValue, 0, strpos($node->nodeValue, '.')) . ' UTC');
       }
-      throw new \Exception(vsprintf('Agiv STS Error: %s Code: %s, subcode: %s.', $error_data));
     }
-    else {
-      $this->lifetime = [];
-      $lifetime = $this->xml->getElementsByTagNameNS(self::XMLNS['trust'], 'Lifetime');
-      if ($lifetime->length) {
-        foreach ($lifetime->item(0)->childNodes as $node) {
-          $this->lifetime[$node->localName] = strtotime(substr($node->nodeValue, 0, strpos($node->nodeValue, '.')) . ' UTC');
-        }
-      }
-      $this->cache = FALSE;
-      return TRUE;
-    }
-    return FALSE;
+    $this->cache = FALSE;
   }
 
   /**
@@ -183,7 +159,7 @@ class AgivSecurityToken {
         $this->lifetime = $data['lifetime'];
         $this->xml->loadXML($data['xml']);
         $this->cache = TRUE;
-        return TRUE;
+        return FALSE;
       }
     }
     else {
@@ -217,12 +193,24 @@ class AgivSecurityToken {
   }
 
   /**
+   * Get binary secret.
+   */
+  public function getBinarySecret() {
+    $secret = $this->xml->getElementsByTagNameNS(self::XMLNS['trust'], 'BinarySecret')->item(0);
+    if ($secret) {
+      return $secret->textContent;
+    }
+    return '';
+  }
+
+  /**
    * Test function to get xml string.
    */
   public function retrieveXml() {
     $agivSTSRequest = new AgivSTSRequest([
       'certPath' => $this->certPath,
       'pkPath' => $this->pkPath,
+      'url' => $this->url,
     ]);
 
     return $agivSTSRequest->xmlOutput();

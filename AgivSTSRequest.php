@@ -12,7 +12,7 @@ use DOMXpath;
 /**
  * Provides methods to build Agiv security token request.
  */
-class AgivSTSRequest extends AgivSTSBase {
+class AgivSTSRequest extends ServiceDocument {
 
   /**
    * Class constants.
@@ -114,13 +114,6 @@ class AgivSTSRequest extends AgivSTSBase {
   }
 
   /**
-   * Output xml as a string.
-   */
-  public function xmlOutput() {
-    return $this->xml->saveXML();
-  }
-
-  /**
    * Prepare XML header.
    */
   protected function prepareXmlHeader(DOMElement $header) {
@@ -147,6 +140,8 @@ class AgivSTSRequest extends AgivSTSBase {
     $this->signatureElements['_0'] = $this->addXmlElementNS($this->securityHeader, 'u', 'u:Timestamp', NULL, [
       'u:Id' => '_0',
     ]);
+
+    // Use 1479388228.057 for testing.
     $times = $this->getTimestamp();
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Created', $times[0]);
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Expires', $times[1]);
