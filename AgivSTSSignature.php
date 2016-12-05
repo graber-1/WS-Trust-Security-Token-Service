@@ -58,19 +58,7 @@ class AgivSTSSignature extends AgivSTSBase {
    * Object constructor.
    */
   public function __construct($data) {
-    foreach ([
-      'xml',
-      'signatureElements',
-      'canonicalMethod',
-      'certPath',
-      'pkPath',
-      'passphrase',
-    ] as $prop) {
-      if (isset($data[$prop])) {
-        $this->{$prop} = $data[$prop];
-      }
-    }
-
+    parent::__construct($data);
     $this->securityTokenId = self::generateGuid('uuid-', '-2');
   }
 

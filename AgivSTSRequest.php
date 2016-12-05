@@ -51,6 +51,9 @@ class AgivSTSRequest extends ServiceDocument {
   // Called URL.
   protected $url;
 
+  // Request realm.
+  protected $realm;
+
   // Document guid.
   protected $docGuid;
 
@@ -72,18 +75,7 @@ class AgivSTSRequest extends ServiceDocument {
     }
 
     // Set object variables.
-    foreach ([
-      'certPath',
-      'pkPath',
-      'passphrase',
-      'action',
-      'url',
-      'realm',
-    ] as $key) {
-      if (isset($data[$key])) {
-        $this->{$key} = $data[$key];
-      }
-    }
+    parent::__construct($data);
 
     // Check if all required values are provided.
     $this->validateVariables();

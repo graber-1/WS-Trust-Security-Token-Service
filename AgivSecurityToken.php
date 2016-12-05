@@ -53,20 +53,7 @@ class AgivSecurityToken extends AgivSTSBase {
     }
 
     // Load object variables.
-    foreach ([
-      'pkPath',
-      'certPath',
-      'url',
-      'realm',
-      'passphrase',
-    ] as $key) {
-      if (isset($data[$key])) {
-        $this->{$key} = $data[$key];
-      }
-      else {
-        throw new \Exception(sprintf('Security token: %s parameter not provided.', $key));
-      }
-    }
+    parent::__construct($data);
 
     $this->xml = new DOMDocument();
   }

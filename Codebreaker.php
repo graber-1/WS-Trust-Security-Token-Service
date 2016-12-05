@@ -30,7 +30,16 @@ class Codebreaker {
 
     **/
 
-    $key = 'fl4qc/csI4YrPK0reoJeFfVcmzIY9ESnqCxSQzbscw4=';
+    $key = base64_decode('fl4qc/csI4YrPK0reoJeFfVcmzIY9ESnqCxSQzbscw4=');
+    $secret = $this->psha1('', $key, 256);
+
+    $signature = base64_encode(hash_hmac('sha1', $digest_data, $secret, TRUE));
+
+    kdpm($signature);
+    kdpm(strlen($signature) . ' - ' . strlen($reference_value));
+    return;
+
+
     $data = [
       'fl4qc/csI4YrPK0reoJeFfVcmzIY9ESnqCxSQzbscw4=',
       'b77a5c561934e089',
@@ -117,6 +126,38 @@ class Codebreaker {
     else {
       kdpm('Failure.');
     }
+  }
+
+  public function psha1($clientSecret, $serverSecret, $sizeBits = 256) {
+    $sizeBytes = $sizeBits / 8;
+
+    $hmacKey = $clientSecret;
+    $hashSize = 160; // HMAC_SHA1 length is always 160
+    $bufferSize = $hashSize / 8 + strlen($serverSecret);
+    $i = 0;
+
+    $b1 = $serverSecret;
+    $b2 = "";
+    $temp = null;
+    $psha = array();
+
+    while ($i < $sizeBytes) {
+      $b1 = hash_hmac('SHA1', $b1, $hmacKey, true);
+      $b2 = $b1 . $serverSecret;
+      $temp = hash_hmac('SHA1', $b2, $hmacKey, true);
+
+      for ($j = 0; $j < strlen($temp); $j++) {
+        if ($i < $sizeBytes) {
+          $psha[$i] = $temp[$j];
+          $i++;
+        }
+        else {
+          break;
+        }
+      }
+    }
+
+    return implode("", $psha);
   }
 
 }
