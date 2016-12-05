@@ -16,8 +16,8 @@ class Codebreaker {
    */
   public function findHmacRef($reference_value = 'jMUWXJCOuY6ghXHiOQy/Ycztn4Q=') {
 
-    $digest_data = '<SignedInfo xmlns="http://www.w3.org/2000/09/xmldsig#"><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></CanonicalizationMethod><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"></SignatureMethod><Reference URI="#_0"><Transforms><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></Transform></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></DigestMethod><DigestValue>Za0dgYRyzOwb3mmoMaQRZvuh8sM=</DigestValue></Reference></SignedInfo>';
 
+    $digest_data = '<SignedInfo xmlns="http://www.w3.org/2000/09/xmldsig#"><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></CanonicalizationMethod><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#hmac-sha1"></SignatureMethod><Reference URI="#_0"><Transforms><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></Transform></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></DigestMethod><DigestValue>Za0dgYRyzOwb3mmoMaQRZvuh8sM=</DigestValue></Reference></SignedInfo>';
     /**
     do {
       $secret = uniqid();
@@ -31,12 +31,12 @@ class Codebreaker {
     **/
 
     $key = base64_decode('fl4qc/csI4YrPK0reoJeFfVcmzIY9ESnqCxSQzbscw4=');
-    $secret = $this->psha1('', $key, 256);
+
+    $secret = $key;
 
     $signature = base64_encode(hash_hmac('sha1', $digest_data, $secret, TRUE));
 
     kdpm($signature);
-    kdpm(strlen($signature) . ' - ' . strlen($reference_value));
     return;
 
 

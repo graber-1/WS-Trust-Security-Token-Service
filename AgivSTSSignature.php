@@ -84,7 +84,7 @@ class AgivSTSSignature extends AgivSTSBase {
       'Algorithm' => self::EXC_C14N,
     ]);
     $this->addXmlElementNs($signed_info, '', 'SignatureMethod', NULL, [
-      'Algorithm' => self::RSA_SHA1,
+      'Algorithm' => $method,
     ]);
 
     // References.
@@ -211,8 +211,7 @@ class AgivSTSSignature extends AgivSTSBase {
           $parameters['secret'] = '';
         }
         $parameters['secret'] = base64_decode($parameters['secret']);
-        $hmac = hash_hmac('sha1', $data, $parameters['secret'], TRUE);
-        $signature = base64_encode($hmac);
+        $signature = base64_encode(hash_hmac('sha1', $data, $parameters['secret'], TRUE));
         break;
 
       default:

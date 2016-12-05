@@ -146,7 +146,7 @@ class AgivSecurityToken extends AgivSTSBase {
         $this->lifetime = $data['lifetime'];
         $this->xml->loadXML($data['xml']);
         $this->cache = TRUE;
-        return FALSE;
+        return TRUE;
       }
     }
     else {
