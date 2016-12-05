@@ -167,7 +167,7 @@ class GipodService extends ServiceDocument {
     ]);
 
     // For testing, use ts of 1480082738.764.
-    $times = $this->getTimestamp();
+    $times = $this->getTimestamp(1480082738.764);
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Created', $times[0]);
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Expires', $times[1]);
 
