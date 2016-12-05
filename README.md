@@ -25,7 +25,7 @@ Folder /data contains a set of requests and response that worked
 with use of .NET application. Documents were captured using Fiddler.
 
 To emulate those requests, use timestamp values from comments in:
- * /AgivSTSRequest.php l. 144
+ * /AgivSTSRequest.php l. 136
  * /services/GipodService.php l. 171
 AND use cache ID "test" (will expire in more than 20 years) in /services/GipodService.php l. 68.
 
