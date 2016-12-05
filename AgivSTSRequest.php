@@ -2,7 +2,7 @@
 
 namespace AgivSTS;
 
-require_once __DIR__ . '/AgivSTSBase.php';
+require_once __DIR__ . '/ServiceDocument.php';
 require_once __DIR__ . '/AgivSTSSignature.php';
 
 use DOMDocument;

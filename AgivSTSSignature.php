@@ -219,16 +219,12 @@ class AgivSTSSignature extends AgivSTSBase {
         break;
 
       case self::HMAC_SHA1:
-        kdpm($data);
         if (!isset($parameters['secret'])) {
           $parameters['secret'] = '';
         }
-        //kdpm($data);
-        //kdpm($parameters['secret']);
         $parameters['secret'] = base64_decode($parameters['secret']);
         $hmac = hash_hmac('sha1', $data, $parameters['secret'], TRUE);
         $signature = base64_encode($hmac);
-        //kdpm($signature);
         break;
 
       default:

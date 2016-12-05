@@ -2,7 +2,7 @@
 
 namespace AgivSTS\Services;
 
-require_once __DIR__ . '/../AgivSTSBase.php';
+require_once __DIR__ . '/../ServiceDocument.php';
 require_once __DIR__ . '/../AgivSecurityToken.php';
 require_once __DIR__ . '/../AgivSTSSignature.php';
 require_once __DIR__ . '/../../../guzzlehttp/guzzle/src/Client.php';
@@ -168,8 +168,8 @@ class GipodService extends ServiceDocument {
       'u:Id' => '_0',
     ]);
 
-    // For testing, use ts of 1480082738.764.
-    $times = $this->getTimestamp(1480082738.764);
+    // For testing, use ts of 1480082738.764 as an argument.
+    $times = $this->getTimestamp();
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Created', $times[0]);
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Expires', $times[1]);
 
