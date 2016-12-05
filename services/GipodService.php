@@ -63,6 +63,8 @@ class GipodService extends ServiceDocument {
       'certPath' => $this->certPath,
       'realm' => 'urn:agiv.be/gipod',
     ]);
+
+    // Use "test" argument to get test security token that corresponds to responses from "data" folder.
     $this->agivSecurityToken->load('gipod');
   }
 
