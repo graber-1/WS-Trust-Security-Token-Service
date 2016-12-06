@@ -164,7 +164,6 @@ class AgivSecurityToken extends AgivSTSBase {
    * Set cache.
    */
   protected function cacheSet($cache_id = '') {
-    // External cache.
     if (is_object($this->cacheObject) && method_exists($this->cacheObject, 'cacheSet')) {
       $this->cacheObject->cacheSet($cache_id, $this);
     }
@@ -174,7 +173,6 @@ class AgivSecurityToken extends AgivSTSBase {
    * Get cache.
    */
   protected function cacheGet($cache_id = '') {
-    // External cache.
     if (is_object($this->cacheObject) && method_exists($this->cacheObject, 'cacheGet')) {
       if ($data = $this->cacheObject->cacheGet($cache_id)) {
         $this->lifetime = $data['lifetime'];
