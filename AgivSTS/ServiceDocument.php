@@ -2,8 +2,6 @@
 
 namespace AgivSTS;
 
-require_once __DIR__ . '/AgivSTSBase.php';
-
 use DOMElement;
 
 /**

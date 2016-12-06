@@ -1,17 +1,15 @@
 <?php
 
-namespace AgivSTS\Services;
+namespace AgivServices;
 
-require_once __DIR__ . '/../ServiceDocument.php';
-require_once __DIR__ . '/../AgivSecurityToken.php';
-require_once __DIR__ . '/../AgivSTSSignature.php';
-require_once __DIR__ . '/../../../guzzlehttp/guzzle/src/Client.php';
-
+use DOMDocument;
+use DOMElement;
+use DOMNode;
+use DOMXpath;
 use AgivSTS\ServiceDocument;
 use AgivSTS\AgivSecurityToken;
 use AgivSTS\AgivSTSSignature;
-use DOMDocument;
-use DOMElement;
+use AgivSTS\Exception\AgivException;
 use GuzzleHttp\Client;
 
 /**
@@ -22,12 +20,25 @@ class GipodService extends ServiceDocument {
   const CONSTRUCTOR_DEFAULTS = [
     'action' => 'GetListLocatieHinder',
     'url' => 'https://gipod.agiv.be/Webservice/GipodService.svc/wsfed',
+    'realm' => 'urn:agiv.be/gipod',
   ];
 
   const ACTION_BASE = 'http://www.agiv.be/Gipod/2010/06/service/IGipodService/';
   const REPLY_TO = 'http://www.w3.org/2005/08/addressing/anonymous';
 
   const XMLNS_DEFAULT = 'http://www.agiv.be/Gipod/2010/06/service';
+
+  // Action result namespaces.
+  const RESULT_XMLNS = 'http://www.agiv.be/Gipod/2010/06/service';
+
+  // Maximum number of attempts to retrieve a new security token and reconnect.
+  // 1: 2 requests (one with cached or new token and 2nd with newly retrieved token).
+  const MAX_ATTEMPTS = 1;
+
+  // Action result paths.
+  const ACTION_PATHS = [
+    'GetListLocatieHinder' => 'b:HinderLocatieElementen/b:EnumeratieElement',
+  ];
 
   protected $action;
   protected $url;
@@ -36,6 +47,9 @@ class GipodService extends ServiceDocument {
 
   protected $certPath;
   protected $pkPath;
+
+  // Security token object.
+  protected $agivSecurityToken;
 
   // Document security header and signature elements.
   protected $securityHeader;
@@ -58,13 +72,14 @@ class GipodService extends ServiceDocument {
     $this->validateVariables();
 
     // Get security token.
-    $this->agivSecurityToken = new AgivSecurityToken([
-      'pkPath' => $this->pkPath,
-      'certPath' => $this->certPath,
-      'realm' => 'urn:agiv.be/gipod',
-    ]);
+    if (!isset($this->agivSecurityToken)) {
+      $this->agivSecurityToken = new AgivSecurityToken([
+        'pkPath' => $this->pkPath,
+        'certPath' => $this->certPath,
+        'realm' => 'urn:agiv.be/gipod',
+      ]);
+    }
 
-    // Use "test" argument to get test security token that corresponds to responses from "data" folder.
     $this->agivSecurityToken->load('gipod');
   }
 
@@ -74,13 +89,13 @@ class GipodService extends ServiceDocument {
   protected function validateVariables() {
     $missing = [];
     foreach (['action', 'url', 'certPath', 'pkPath'] as $variable_name) {
-      if (empty($this->{$variable_name})) {
+      if (empty($this->$variable_name)) {
         $missing[] = $variable_name;
       }
     }
 
     if (!empty($missing)) {
-      throw new \Exception('Gipod object variables missing: ' . implode(', ', $missing));
+      throw new AgivException('Gipod object variables missing: ' . implode(', ', $missing));
     }
   }
 
@@ -99,7 +114,7 @@ class GipodService extends ServiceDocument {
   /**
    * Execute request.
    */
-  public function call($action = FALSE) {
+  public function call($action = FALSE, $try = 0) {
     if ($action) {
       $this->action = $action;
     }
@@ -124,9 +139,22 @@ class GipodService extends ServiceDocument {
     }
 
     $this->xml->loadXML($response_str);
-    if ($this->checkResponse()) {
-      kdpm('success');
-      return $this->xml;
+
+    try {
+      $this->checkResponse();
+      return $this->processOutput();
+    }
+    catch (AgivException $e) {
+      if ($try < self::MAX_ATTEMPTS) {
+        $try++;
+        // Reload token from STS.
+        $this->agivSecurityToken->load('gipod', TRUE);
+        $this->call($action, $try);
+      }
+      else {
+        $e->faultData['attempts'] = $try;
+        throw $e;
+      }
     }
   }
 
@@ -167,8 +195,6 @@ class GipodService extends ServiceDocument {
     $this->signatureElements['_0'] = $this->addXmlElementNS($this->securityHeader, 'u', 'u:Timestamp', NULL, [
       'u:Id' => '_0',
     ]);
-
-    // For testing, use ts of 1480082738.764 as an argument.
     $times = $this->getTimestamp();
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Created', $times[0]);
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Expires', $times[1]);
@@ -209,6 +235,53 @@ class GipodService extends ServiceDocument {
     $secret = $this->agivSecurityToken->getBinarySecret();
 
     $sigObject->signDocument($this->securityHeader, $importedReference, AgivSTSSignature::HMAC_SHA1, ['secret' => $secret]);
+  }
+
+  /**
+   * Process output data for Gipod methods.
+   */
+  private function processOutput() {
+    $output = [];
+
+    $resultElement = $this->xml->getElementsByTagNameNS(self::RESULT_XMLNS, $this->action . 'Result')->item(0);
+    if ($resultElement && self::ACTION_PATHS[$this->action] !== NULL) {
+      $xpath = new DOMXPath($this->xml);
+      $query = self::ACTION_PATHS[$this->action];
+      $result = $xpath->query($query, $resultElement);
+      if ($result->length) {
+        for ($i = 0; $i < $result->length; $i++) {
+          $node = $result->item($i);
+          $output[$i] = $this->getNodeValue($node);
+        }
+      }
+    }
+    return $output;
+  }
+
+  /**
+   * Helper function to recursively return values of DOMNode and its children.
+   */
+  protected function getNodeValue(DOMNode $node) {
+    $childNodes = [];
+    for ($i = 0; $i < $node->childNodes->length; $i++) {
+      if ($node->childNodes->item($i)->nodeType === XML_ELEMENT_NODE) {
+        $childNodes[] = $node->childNodes->item($i);
+      }
+    }
+
+    if (!empty($childNodes)) {
+      foreach ($childNodes as $childNode) {
+        $output[$childNode->localName] .= $this->getNodeValue($childNode);
+      }
+    }
+    else {
+      $output = $node->nodeValue;
+    }
+
+    if (isset($output)) {
+      return $output;
+    }
+    return NULL;
   }
 
 }

@@ -4,30 +4,12 @@ INTRODUCTION
 This is a library to Get Security tokens fron Agiv-STS service
 and use them in service classes.
 
-So far The STS part is done, but work with first service (Gipod)
-is still in progress.
-
+So far we have one class to access Gipod service.
 
 TODO
 ----
 
-Figure out how to calculate signature value for Gipod request.
-Method: hmac-sha1.
-
-With testing timestamp values and test cache the signatureValue
-must be equal to the value in /data/gipod_request.xml
-
-
-TESTING INFORMATION
--------------------
-
-Folder /data contains a set of requests and response that worked
-with use of .NET application. Documents were captured using Fiddler.
-
-To emulate those requests, use timestamp values from comments in:
- * /AgivSTSRequest.php l. 136
- * /services/GipodService.php l. 171
-AND use cache ID "test" (will expire in more than 20 years) in /services/GipodService.php l. 68.
+ * No new guidelines atm.
 
 
 DRUPAL 8 WRAPPER
@@ -47,4 +29,4 @@ Can be replaced with kint() or dpm() when devel is preferred.
 ADDITIONAL INFO
 ---------------
 
-Codebreaker class is used only for development.
+None at the moment.

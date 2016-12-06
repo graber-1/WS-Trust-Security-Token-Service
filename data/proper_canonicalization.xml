@@ -1,1 +1,0 @@
-<a:To xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" u:Id="_1" s:mustUnderstand="1">https://auth.agiv.be/sts/Services/SalvadorSecurityTokenServiceConfiguration.svc/CertificateMessage</a:To>

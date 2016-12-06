@@ -5,6 +5,7 @@ namespace AgivSTS;
 use DOMDocument;
 use DOMElement;
 use DOMXpath;
+use AgivSTS\Exception\AgivException;
 
 /**
  * Base class for Agiv STS library.
@@ -68,7 +69,7 @@ abstract class AgivSTSBase {
       $element = $xml->createElementNS(self::XMLNS[$namespace], $name, $content);
     }
     else {
-      throw new \Exception(sprintf('Namespace "%s" is not defined.', $namespace));
+      throw new AgivException(sprintf('Namespace "%s" is not defined.', $namespace));
     }
 
     // Add attributes.
@@ -79,7 +80,7 @@ abstract class AgivSTSBase {
           $element->setAttributeNS(self::XMLNS[$namespace], $attribute, $value);
         }
         else {
-          throw new \Exception(sprintf('Namespace "%s" is not defined.', $namespace));
+          throw new AgivException(sprintf('Namespace "%s" is not defined.', $namespace));
         }
       }
       else {
@@ -97,7 +98,7 @@ abstract class AgivSTSBase {
         $element->setAttributeNS('http://www.w3.org/2000/xmlns/', $ns_name, self::XMLNS[$namespace]);
       }
       else {
-        throw new \Exception(sprintf('Namespace "%s" is not defined.', $namespace));
+        throw new AgivException(sprintf('Namespace "%s" is not defined.', $namespace));
       }
     }
 
@@ -209,8 +210,8 @@ abstract class AgivSTSBase {
           $error_data[$key] = 'not provided';
         }
       }
-      array_unshift($error_data, get_class($this));
-      throw new \Exception(vsprintf('%s error: %s Code: %s, subcode: %s.', $error_data));
+      $error_data = ['class' => get_class($this)] + $error_data;
+      throw new AgivException(vsprintf('%s error: %s Code: %s, subcode: %s.', $error_data), $error_data);
     }
     return TRUE;
   }

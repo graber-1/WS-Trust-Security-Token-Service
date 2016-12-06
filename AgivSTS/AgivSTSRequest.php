@@ -2,12 +2,10 @@
 
 namespace AgivSTS;
 
-require_once __DIR__ . '/ServiceDocument.php';
-require_once __DIR__ . '/AgivSTSSignature.php';
-
 use DOMDocument;
 use DOMElement;
 use DOMXpath;
+use AgivSTS\Exception\AgivException;
 
 /**
  * Provides methods to build Agiv security token request.
@@ -101,7 +99,7 @@ class AgivSTSRequest extends ServiceDocument {
     }
 
     if (!empty($missing)) {
-      throw new \Exception('Object variables missing: ' . implode(', ', $missing));
+      throw new AgivException('AgivSTSRequest object variables missing: ' . implode(', ', $missing));
     }
   }
 
@@ -132,8 +130,6 @@ class AgivSTSRequest extends ServiceDocument {
     $this->signatureElements['_0'] = $this->addXmlElementNS($this->securityHeader, 'u', 'u:Timestamp', NULL, [
       'u:Id' => '_0',
     ]);
-
-    // Use 1479388228.057 for testing.
     $times = $this->getTimestamp();
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Created', $times[0]);
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Expires', $times[1]);

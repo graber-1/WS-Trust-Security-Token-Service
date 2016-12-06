@@ -2,12 +2,10 @@
 
 namespace AgivSTS;
 
-require_once __DIR__ . '/../../guzzlehttp/guzzle/src/Client.php';
-require_once __DIR__ . '/AgivSTSRequest.php';
-
 use GuzzleHttp\Client;
 use SimpleXMLElement;
 use DOMDocument;
+use AgivSTS\Exception\AgivException;
 
 /**
  * The security token class.
@@ -18,22 +16,27 @@ class AgivSecurityToken extends AgivSTSBase {
   protected $certPath;
   protected $url;
   protected $realm;
+  protected $action;
   protected $passphrase;
 
   protected $xml;
 
   protected $lifetime;
 
+  // External cache object.
+  protected $cacheObject;
+
+  // Boolyean param indicationg if token was retrieved from cache or not.
   protected $cache;
 
   // Defaults.
   const CONSTRUCTOR_DEFAULTS = [
     'url' => 'https://auth.agiv.be/sts/Services/SalvadorSecurityTokenServiceConfiguration.svc/CertificateMessage',
-    'realm' => 'urn:agiv.be/gipod',
     'action' => 'Issue',
     'passphrase' => '',
   ];
 
+  // Class namespaces.
   const XMLNS = [
     's' => 'http://www.w3.org/2003/05/soap-envelope',
     'trust' => 'http://docs.oasis-open.org/ws-sx/ws-trust/200512',
@@ -55,13 +58,49 @@ class AgivSecurityToken extends AgivSTSBase {
     // Load object variables.
     parent::__construct($data);
 
+    // Validate.
+    $this->validateVariables();
+
     $this->xml = new DOMDocument();
   }
 
   /**
-   * Load token data.
+   * Getter function.
    */
-  public function load($cache_id = '') {
+  public function get($property) {
+    if (isset($this->$property)) {
+      return $this->$property;
+    }
+  }
+
+  /**
+   * Validate object variables.
+   */
+  protected function validateVariables() {
+    $missing = [];
+    foreach (['action', 'url', 'realm', 'certPath', 'pkPath'] as $variable_name) {
+      if (empty($this->{$variable_name})) {
+        $missing[] = $variable_name;
+      }
+    }
+
+    if (!empty($missing)) {
+      throw new AgivException('Agiv security token object variables missing: ' . implode(', ', $missing));
+    }
+  }
+
+  /**
+   * Load token data.
+   *
+   * @param string $cache_id
+   *   No comment required.
+   * @param bool $flush
+   *   Should the cache be bypassed and set for newly retrieved token?
+   */
+  public function load($cache_id = '', $flush = FALSE) {
+    if (!$flush) {
+
+    }
     if (!$this->cacheGet($cache_id)) {
       if ($this->requestToken()) {
         $this->cacheSet($cache_id);
@@ -125,33 +164,27 @@ class AgivSecurityToken extends AgivSTSBase {
    * Set cache.
    */
   protected function cacheSet($cache_id = '') {
-    $filename = 'cache' . (empty($cache_id) ? '' : '_' . $cache_id) . '.dat';
-    $path = __DIR__ . '/cache/' . $filename;
-    $data = array(
-      'lifetime' => $this->lifetime,
-      'xml' => $this->xml->saveXML(),
-    );
-    file_put_contents($path, serialize($data));
+    // External cache.
+    if (is_object($this->cacheObject) && method_exists($this->cacheObject, 'cacheSet')) {
+      $this->cacheObject->cacheSet($cache_id, $this);
+    }
   }
 
   /**
    * Get cache.
    */
   protected function cacheGet($cache_id = '') {
-    $filename = 'cache' . (empty($cache_id) ? '' : '_' . $cache_id) . '.dat';
-    $path = __DIR__ . '/cache/' . $filename;
-    if (file_exists($path)) {
-      $data = unserialize(file_get_contents($path));
-      if (isset($data['lifetime']) && $data['lifetime']['Expires'] > time()) {
+    // External cache.
+    if (is_object($this->cacheObject) && method_exists($this->cacheObject, 'cacheGet')) {
+      if ($data = $this->cacheObject->cacheGet($cache_id)) {
         $this->lifetime = $data['lifetime'];
         $this->xml->loadXML($data['xml']);
         $this->cache = TRUE;
         return TRUE;
       }
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**
@@ -167,7 +200,7 @@ class AgivSecurityToken extends AgivSTSBase {
 
     }
     else {
-      throw new \Exception('No encrypted data can be found in retrieved security token.');
+      throw new AgivException('No encrypted data can be found in retrieved security token.');
     }
   }
 

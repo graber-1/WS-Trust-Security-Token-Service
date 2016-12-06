@@ -2,9 +2,8 @@
 
 namespace AgivSTS;
 
-require_once __DIR__ . '/AgivSTSBase.php';
-
 use DOMElement;
+use AgivSTS\Exception\AgivException;
 
 /**
  * Class for signing XML documents for AGIV service.
@@ -150,7 +149,7 @@ class AgivSTSSignature extends AgivSTSBase {
       return $data;
     }
     else {
-      throw new \Exception('Can\'t retrieve certificate file contents.');
+      throw new AgivException('Can\'t retrieve certificate file contents.');
     }
   }
 
@@ -182,7 +181,7 @@ class AgivSTSSignature extends AgivSTSBase {
         break;
 
       default:
-        throw new Exception("Cannot validate digest: Unsupported Algorithm <$digestAlgorithm>");
+        throw new AgivException("Cannot calculate digest: Unsupported Algorithm <$digestAlgorithm>");
     }
 
     return base64_encode(hash($alg, $data, TRUE));
@@ -200,7 +199,7 @@ class AgivSTSSignature extends AgivSTSBase {
         $private_key = openssl_pkey_get_private($pk_string, $this->passphrase);
 
         if (!openssl_sign($data, $signature, $private_key, OPENSSL_ALGO_SHA1)) {
-          throw new \Exception('Failure Signing Data: ' . openssl_error_string() . ' - ' . OPENSSL_ALGO_SHA1);
+          throw new AgivException('Failure Signing Data: ' . openssl_error_string() . ' - ' . OPENSSL_ALGO_SHA1);
         }
         openssl_free_key($private_key);
         $signature = base64_encode($signature);
@@ -215,7 +214,7 @@ class AgivSTSSignature extends AgivSTSBase {
         break;
 
       default:
-        throw new \Exception(sprintf('Failure Signing Data: method %s not supported.', $method));
+        throw new AgivException(sprintf('Failure Signing Data: method %s not supported.', $method));
     }
 
     return $signature;
