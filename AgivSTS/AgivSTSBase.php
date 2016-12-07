@@ -21,6 +21,9 @@ abstract class AgivSTSBase {
     'trust' => 'http://docs.oasis-open.org/ws-sx/ws-trust/200512',
     'wsp' => 'http://schemas.xmlsoap.org/ws/2004/09/policy',
     'wsa' => 'http://www.w3.org/2005/08/addressing',
+    'b' => 'http://www.agiv.be/Gipod/2010/06',
+    'i' => 'http://www.w3.org/2001/XMLSchema-instance',
+    'c' => 'http://schemas.microsoft.com/2003/10/Serialization/Arrays',
     '' => 'http://www.w3.org/2000/09/xmldsig#',
   ];
 
@@ -67,6 +70,9 @@ abstract class AgivSTSBase {
 
     if (self::XMLNS[$namespace] !== NULL) {
       $element = $xml->createElementNS(self::XMLNS[$namespace], $name, $content);
+    }
+    elseif (substr($namespace, 0, 4) == 'http') {
+      $element = $xml->createElementNS($namespace, $name, $content);
     }
     else {
       throw new AgivException(sprintf('Namespace "%s" is not defined.', $namespace));

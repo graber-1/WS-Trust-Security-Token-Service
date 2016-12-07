@@ -28,20 +28,33 @@ class GipodService extends ServiceDocument {
 
   const XMLNS_DEFAULT = 'http://www.agiv.be/Gipod/2010/06/service';
 
-  // Action result namespaces.
+  // Action result namespace.
   const RESULT_XMLNS = 'http://www.agiv.be/Gipod/2010/06/service';
+
+  // Result Array element names for result parsing.
+  const RESULT_ARRAY_ELEMENTS = ['EnumeratieElement'];
+
 
   // Maximum number of attempts to retrieve a new security token and reconnect.
   // 1: 2 requests (one with cached or new token and 2nd with newly retrieved token).
   const MAX_ATTEMPTS = 1;
 
   // Action result paths.
+  // For a list of methods, refer to:
+  // https://gipod.agiv.be/Webservice/help/ME-GipodService.htm.
   const ACTION_PATHS = [
-    'GetListLocatieHinder' => 'b:HinderLocatieElementen/b:EnumeratieElement',
+    'GetListLocatieHinder' => ['data' => 'b:HinderLocatieElementen/b:EnumeratieElement'],
+    'ListHinder' => [
+      'nextRecord' => 'b:NextRecord',
+      'data' => 'b:InnameHinder/b:InnameHinderItem',
+    ]
   ];
 
   protected $action;
   protected $url;
+
+  // Request parameters.
+  protected $parameters;
 
   protected $docGuid;
 
@@ -114,14 +127,15 @@ class GipodService extends ServiceDocument {
   /**
    * Execute request.
    */
-  public function call($action = FALSE, $try = 0) {
+  public function call($action = FALSE, $parameters = array(), $try = 0) {
     if ($action) {
       $this->action = $action;
     }
+    $this->parameters = $parameters;
 
     $this->buildRequest();
 
-    $client = new Client(['timeout' => 15]);
+    $client = new Client(['timeout' => $GLOBALS['agiv_library_settings']['call_timeout']]);
 
     $options = [
       'headers' => [
@@ -135,7 +149,12 @@ class GipodService extends ServiceDocument {
       $response_str = (string) $response->getBody();
     }
     catch (\Exception $e) {
-      $response_str = $e->getResponse()->getBody();
+      if ($response = $e->getResponse) {
+        $response_str = $response->getBody();
+      }
+      else {
+        throw new \AgivException('Unexpected response');
+      }
     }
 
     $this->xml->loadXML($response_str);
@@ -145,7 +164,7 @@ class GipodService extends ServiceDocument {
       return $this->processOutput();
     }
     catch (AgivException $e) {
-      if ($try < self::MAX_ATTEMPTS) {
+      if ($try < $GLOBALS['agiv_library_settings']['max_service_attempts']) {
         $try++;
         // Reload token from STS.
         $this->agivSecurityToken->load('gipod', TRUE);
@@ -214,6 +233,23 @@ class GipodService extends ServiceDocument {
   protected function prepareXmlBody(DOMElement $body) {
     $element = $this->xml->createElementNS(self::XMLNS_DEFAULT, $this->action);
     $body->appendChild($element);
+
+    if (!empty($this->parameters)) {
+      $request = $this->addXmlElementNS($element, self::XMLNS_DEFAULT, 'request', NULL, [], ['b', 'i']);
+      foreach ($this->parameters as $name => $value) {
+        if (is_array($value)) {
+          $arrayElement = $this->addXmlElementNS($request, 'b', 'b:' . $name, NULL, [], ['c']);
+          foreach ($value as $item) {
+            if (is_int($item)) {
+              $this->addXmlElementNS($arrayElement, 'c', 'c:int', $item);
+            }
+          }
+        }
+        else {
+          $this->addXmlElementNS($request, 'b', 'b:' . $name, $value);
+        }
+      }
+    }
   }
 
   /**
@@ -246,14 +282,18 @@ class GipodService extends ServiceDocument {
     $resultElement = $this->xml->getElementsByTagNameNS(self::RESULT_XMLNS, $this->action . 'Result')->item(0);
     if ($resultElement && self::ACTION_PATHS[$this->action] !== NULL) {
       $xpath = new DOMXPath($this->xml);
-      $query = self::ACTION_PATHS[$this->action];
-      $result = $xpath->query($query, $resultElement);
-      if ($result->length) {
-        for ($i = 0; $i < $result->length; $i++) {
-          $node = $result->item($i);
-          $output[$i] = $this->getNodeValue($node);
+      foreach (self::ACTION_PATHS[$this->action] as $key => $query) {
+        $result = $xpath->query($query, $resultElement);
+        if ($result->length) {
+          for ($i = 0; $i < $result->length; $i++) {
+            $node = $result->item($i);
+            $output[$key][$i] = $this->getNodeValue($node);
+          }
         }
       }
+    }
+    else {
+      $output = $this->xml->saveXML();
     }
     return $output;
   }
@@ -262,6 +302,7 @@ class GipodService extends ServiceDocument {
    * Helper function to recursively return values of DOMNode and its children.
    */
   protected function getNodeValue(DOMNode $node) {
+
     $childNodes = [];
     for ($i = 0; $i < $node->childNodes->length; $i++) {
       if ($node->childNodes->item($i)->nodeType === XML_ELEMENT_NODE) {
@@ -271,7 +312,28 @@ class GipodService extends ServiceDocument {
 
     if (!empty($childNodes)) {
       foreach ($childNodes as $childNode) {
-        $output[$childNode->localName] .= $this->getNodeValue($childNode);
+        if (in_array($childNode->localName, self::RESULT_ARRAY_ELEMENTS)) {
+          $output[$childNode->localName][] = $this->getNodeValue($childNode);
+        }
+        else {
+          // Also support returning arrays.
+          if (!isset($namecount[$childNode->localName])) {
+            $namecount[$childNode->localName] = 1;
+          }
+          else {
+            $namecount[$childNode->localName]++;
+          }
+
+          if ($namecount[$childNode->localName] == 2) {
+            $output[$childNode->localName] = [$output[$childNode->localName]];
+          }
+          if ($namecount[$childNode->localName] == 1) {
+            $output[$childNode->localName] = $this->getNodeValue($childNode);
+          }
+          else {
+            $output[$childNode->localName][] = $this->getNodeValue($childNode);
+          }
+        }
       }
     }
     else {

@@ -12,3 +12,10 @@ spl_autoload_register(function ($class) {
     require_once strtr($class, ['\\' => '/']) . '.php';
   }
 });
+
+if (file_exists('agiv_settings.php')) {
+  require_once 'agiv_settings.php';
+}
+else {
+  require_once 'agiv_settings_default.php';
+}
