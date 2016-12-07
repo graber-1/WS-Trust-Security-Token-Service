@@ -28,12 +28,19 @@ class GipodService extends ServiceDocument {
 
   const XMLNS_DEFAULT = 'http://www.agiv.be/Gipod/2010/06/service';
 
+  // Parameter namespaces: first value is parent namespace,
+  // second is child element namespace. If there is no parent,
+  // first value applies to the value element.
+  const PARAM_NAMESPACES = [
+    'WerkopdrachtStatusIds' => ['b', 'c'],
+    'StatusIds' => ['b', 'c'],
+  ];
+
   // Action result namespace.
   const RESULT_XMLNS = 'http://www.agiv.be/Gipod/2010/06/service';
 
   // Result Array element names for result parsing.
   const RESULT_ARRAY_ELEMENTS = ['EnumeratieElement'];
-
 
   // Maximum number of attempts to retrieve a new security token and reconnect.
   // 1: 2 requests (one with cached or new token and 2nd with newly retrieved token).
@@ -47,7 +54,7 @@ class GipodService extends ServiceDocument {
     'ListHinder' => [
       'nextRecord' => 'b:NextRecord',
       'data' => 'b:InnameHinder/b:InnameHinderItem',
-    ]
+    ],
   ];
 
   protected $action;
@@ -126,8 +133,18 @@ class GipodService extends ServiceDocument {
 
   /**
    * Execute request.
+   *
+   * @param string $action
+   *   Method to call.
+   * @param array $parameters
+   *   Array of method parameters.
+   * @param bool $bypass_paths
+   *   If set to TRUE, predefined data paths will be ignored
+   *   and entire result structure will be returned.
+   * @param int $try
+   *   Internal use only.
    */
-  public function call($action = FALSE, $parameters = array(), $try = 0) {
+  public function call($action = FALSE, $parameters = array(), $bypass_paths = FALSE, $try = 0) {
     if ($action) {
       $this->action = $action;
     }
@@ -149,11 +166,21 @@ class GipodService extends ServiceDocument {
       $response_str = (string) $response->getBody();
     }
     catch (\Exception $e) {
-      if ($response = $e->getResponse) {
-        $response_str = $response->getBody();
+      if (method_exists($e, 'getResponse')) {
+        $response = $e->getResponse();
+        if (method_exists($response, 'getBody')) {
+          $response_str = (string) $e->getResponse()->getBody();
+        }
+        else {
+          throw new AgivException($e->getMessage(), [
+            'class' => get_class($this),
+            'reason' => 'Unable to connect',
+            'code' => 500,
+          ]);
+        }
       }
       else {
-        throw new \AgivException('Unexpected response');
+        throw new AgivException('Unexpected response.');
       }
     }
 
@@ -161,7 +188,7 @@ class GipodService extends ServiceDocument {
 
     try {
       $this->checkResponse();
-      return $this->processOutput();
+      return $this->processOutput($bypass_paths);
     }
     catch (AgivException $e) {
       if ($try < $GLOBALS['agiv_library_settings']['max_service_attempts']) {
@@ -237,16 +264,33 @@ class GipodService extends ServiceDocument {
     if (!empty($this->parameters)) {
       $request = $this->addXmlElementNS($element, self::XMLNS_DEFAULT, 'request', NULL, [], ['b', 'i']);
       foreach ($this->parameters as $name => $value) {
+        if (self::PARAM_NAMESPACES[$name] !== NULL) {
+          $namespaces = self::PARAM_NAMESPACES[$name];
+        }
+        else {
+          $namespaces = ['b', 'b'];
+        }
+
         if (is_array($value)) {
-          $arrayElement = $this->addXmlElementNS($request, 'b', 'b:' . $name, NULL, [], ['c']);
-          foreach ($value as $item) {
+          if (empty($namespaces[1]) || $namespaces[1] == 'b') {
+            $parent_ns = [];
+          }
+          else {
+            $parent_ns = [$namespaces[1]];
+          }
+
+          $arrayElement = $this->addXmlElementNS($request, $namespaces[0], $namespaces[0] . ':' . $name, NULL, [], $parent_ns);
+          foreach ($value as $name => $item) {
             if (is_int($item)) {
-              $this->addXmlElementNS($arrayElement, 'c', 'c:int', $item);
+              $this->addXmlElementNS($arrayElement, $namespaces[1], $namespaces[1] . ':int', $item);
+            }
+            else {
+              $this->addXmlElementNS($arrayElement, $namespaces[1], $name, $item);
             }
           }
         }
         else {
-          $this->addXmlElementNS($request, 'b', 'b:' . $name, $value);
+          $this->addXmlElementNS($request, $namespaces[0], $namespaces[0] . ':' . $name, $value);
         }
       }
     }
@@ -276,20 +320,25 @@ class GipodService extends ServiceDocument {
   /**
    * Process output data for Gipod methods.
    */
-  private function processOutput() {
+  private function processOutput($bypass_paths = FALSE) {
     $output = [];
 
     $resultElement = $this->xml->getElementsByTagNameNS(self::RESULT_XMLNS, $this->action . 'Result')->item(0);
-    if ($resultElement && self::ACTION_PATHS[$this->action] !== NULL) {
-      $xpath = new DOMXPath($this->xml);
-      foreach (self::ACTION_PATHS[$this->action] as $key => $query) {
-        $result = $xpath->query($query, $resultElement);
-        if ($result->length) {
-          for ($i = 0; $i < $result->length; $i++) {
-            $node = $result->item($i);
-            $output[$key][$i] = $this->getNodeValue($node);
+    if ($resultElement) {
+      if (self::ACTION_PATHS[$this->action] !== NULL && !$bypass_paths) {
+        $xpath = new DOMXPath($this->xml);
+        foreach (self::ACTION_PATHS[$this->action] as $key => $query) {
+          $result = $xpath->query($query, $resultElement);
+          if ($result->length) {
+            for ($i = 0; $i < $result->length; $i++) {
+              $node = $result->item($i);
+              $output[$key][$i] = $this->getNodeValue($node);
+            }
           }
         }
+      }
+      else {
+        $output = $this->getNodeValue($resultElement);
       }
     }
     else {
