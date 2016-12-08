@@ -174,7 +174,8 @@ class GipodService extends ServiceDocument {
         else {
           throw new AgivException($e->getMessage(), [
             'class' => get_class($this),
-            'reason' => 'Unable to connect',
+            'method' => $this->action,
+            'reason' => 'Possible: gipod server down or wrong action name.',
             'code' => 500,
           ]);
         }
@@ -279,7 +280,14 @@ class GipodService extends ServiceDocument {
             $parent_ns = [$namespaces[1]];
           }
 
-          $arrayElement = $this->addXmlElementNS($request, $namespaces[0], $namespaces[0] . ':' . $name, NULL, [], $parent_ns);
+          $arrayElement = $this->addXmlElementNS(
+            $request,
+            $namespaces[0],
+            $namespaces[0] . ':' . $name,
+            NULL,
+            empty($value) ? ['i:nil' => 'true'] : [],
+            $parent_ns
+          );
           foreach ($value as $name => $item) {
             if (is_int($item)) {
               $this->addXmlElementNS($arrayElement, $namespaces[1], $namespaces[1] . ':int', $item);
@@ -290,7 +298,13 @@ class GipodService extends ServiceDocument {
           }
         }
         else {
-          $this->addXmlElementNS($request, $namespaces[0], $namespaces[0] . ':' . $name, $value);
+          $this->addXmlElementNS(
+            $request,
+            $namespaces[0],
+            $namespaces[0] . ':' . $name,
+            $value,
+            empty($value) ? ['i:nil' => 'true'] : []
+          );
         }
       }
     }
