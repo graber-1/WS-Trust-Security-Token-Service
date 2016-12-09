@@ -108,7 +108,7 @@ class GipodService extends ServiceDocument {
    */
   protected function validateVariables() {
     $missing = [];
-    foreach (['action', 'url', 'certPath', 'pkPath'] as $variable_name) {
+    foreach (['action', 'url'] as $variable_name) {
       if (empty($this->$variable_name)) {
         $missing[] = $variable_name;
       }

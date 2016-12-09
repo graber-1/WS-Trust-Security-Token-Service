@@ -23,7 +23,6 @@ class AgivDefaultCache implements AgivCacheInterface {
     $path = self::CACHE_PATH . '/' . $filename;
     if (file_exists($path)) {
       $data = unserialize(file_get_contents($path));
-      // TODO: Add some safety value to expire time.
       if (isset($data['lifetime']) && $data['lifetime']['Expires'] > (time() - self::SAFETY_TIMESPAN)) {
         return $data;
       }
