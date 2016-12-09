@@ -206,6 +206,20 @@ class GipodService extends ServiceDocument {
   }
 
   /**
+   * Implements __call magic method to call gipod service method.
+   */
+  public function __call($name, $arguments = []) {
+
+    if (!isset($arguments[0])) {
+      $arguments[0] = [];
+    }
+    if (!isset($arguments[1])) {
+      $arguments[1] = FALSE;
+    }
+    $this->call($name, $arguments[0], $arguments[1]);
+  }
+
+  /**
    * Test function to get xml string.
    */
   public function xmlOutput() {

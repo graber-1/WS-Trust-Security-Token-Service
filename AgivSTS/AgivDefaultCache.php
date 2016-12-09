@@ -7,7 +7,7 @@ use AgivSTS\Exception\AgivException;
 /**
  * Defines default security token cache mechanism.
  */
-class AgivDefaultCache {
+class AgivDefaultCache implements AgivCacheInterface {
 
   // Safety timespan for token expiration.
   const SAFETY_TIMESPAN = 30;
