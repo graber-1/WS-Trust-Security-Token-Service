@@ -58,9 +58,6 @@ class AgivSecurityToken extends AgivSTSBase {
     // Load object variables.
     parent::__construct($data);
 
-    // Validate.
-    $this->validateVariables();
-
     $this->xml = new DOMDocument();
   }
 
@@ -98,10 +95,7 @@ class AgivSecurityToken extends AgivSTSBase {
    *   Should the cache be bypassed and set for newly retrieved token?
    */
   public function load($cache_id = '', $flush = FALSE) {
-    if (!$flush) {
-
-    }
-    if (!$this->cacheGet($cache_id)) {
+    if ($flush || !$this->cacheGet($cache_id)) {
       if ($this->requestToken()) {
         $this->cacheSet($cache_id);
       }
@@ -112,6 +106,10 @@ class AgivSecurityToken extends AgivSTSBase {
    * Get new token data.
    */
   public function requestToken() {
+    // Validate.
+    $this->validateVariables();
+
+    // Build request.
     $agivSTSRequest = new AgivSTSRequest([
       'certPath' => $this->certPath,
       'pkPath' => $this->pkPath,

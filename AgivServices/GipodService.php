@@ -87,20 +87,6 @@ class GipodService extends ServiceDocument {
     }
 
     parent::__construct($data);
-
-    // Check if all required values are provided.
-    $this->validateVariables();
-
-    // Get security token.
-    if (!isset($this->agivSecurityToken)) {
-      $this->agivSecurityToken = new AgivSecurityToken([
-        'pkPath' => $this->pkPath,
-        'certPath' => $this->certPath,
-        'realm' => 'urn:agiv.be/gipod',
-      ]);
-    }
-
-    $this->agivSecurityToken->load('gipod');
   }
 
   /**
@@ -108,7 +94,7 @@ class GipodService extends ServiceDocument {
    */
   protected function validateVariables() {
     $missing = [];
-    foreach (['action', 'url'] as $variable_name) {
+    foreach (['action', 'url', 'agivSecurityToken'] as $variable_name) {
       if (empty($this->$variable_name)) {
         $missing[] = $variable_name;
       }
@@ -123,6 +109,12 @@ class GipodService extends ServiceDocument {
    * Gipod request builder.
    */
   public function buildRequest() {
+    // Check if all required values are provided.
+    $this->validateVariables();
+
+    // Load security token.
+    $this->agivSecurityToken->load('gipod');
+
     // Generate document guid.
     $this->docGuid = self::generateGuid();
 
@@ -216,7 +208,7 @@ class GipodService extends ServiceDocument {
     if (!isset($arguments[1])) {
       $arguments[1] = FALSE;
     }
-    $this->call($name, $arguments[0], $arguments[1]);
+    return $this->call($name, $arguments[0], $arguments[1]);
   }
 
   /**
