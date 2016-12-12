@@ -382,7 +382,7 @@ class GipodService extends ServiceDocument {
     if (!empty($childNodes)) {
       foreach ($childNodes as $childNode) {
         if (in_array($childNode->localName, self::RESULT_ARRAY_ELEMENTS)) {
-          $output[$childNode->localName][] = $this->getNodeValue($childNode);
+          $output[] = $this->getNodeValue($childNode);
         }
         else {
           // Also support returning arrays.
