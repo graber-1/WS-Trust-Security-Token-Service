@@ -50,7 +50,7 @@ class AgivSecurityToken extends AgivSTSBase {
   public function __construct(array $data) {
     // Apply defaults.
     foreach (self::CONSTRUCTOR_DEFAULTS as $key => $value) {
-      if (is_null($data[$key])) {
+      if (!isset($data[$key])) {
         $data[$key] = $value;
       }
     }
@@ -119,7 +119,7 @@ class AgivSecurityToken extends AgivSTSBase {
       'realm' => $this->realm,
     ]);
 
-    $client = new Client(['timeout' => $GLOBALS['agiv_library_settings']['call_timeout']]);
+    $client = new Client(['timeout' => isset($GLOBALS['agiv_library_settings']) ? $GLOBALS['agiv_library_settings']['call_timeout'] : 15]);
 
     $options = [
       'headers' => [

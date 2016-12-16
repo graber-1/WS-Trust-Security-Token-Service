@@ -67,9 +67,9 @@ abstract class AgivSTSBase {
    */
   protected function prepareXmlElementNs($namespace, $name, $content = NULL, $attributes = [], $namespaces = []) {
     $xml = &$this->xml;
-
-    if (self::XMLNS[$namespace] !== NULL) {
-      $element = $xml->createElementNS(self::XMLNS[$namespace], $name, $content);
+    $xmlns = self::XMLNS;
+    if (isset($xmlns[$namespace])) {
+      $element = $xml->createElementNS($xmlns[$namespace], $name, $content);
     }
     elseif (substr($namespace, 0, 4) == 'http') {
       $element = $xml->createElementNS($namespace, $name, $content);
@@ -82,8 +82,8 @@ abstract class AgivSTSBase {
     foreach ($attributes as $attribute => $value) {
       if (($pos = strpos($attribute, ':')) !== FALSE) {
         $namespace = substr($attribute, 0, $pos);
-        if (self::XMLNS[$namespace] !== NULL) {
-          $element->setAttributeNS(self::XMLNS[$namespace], $attribute, $value);
+        if (isset($xmlns[$namespace])) {
+          $element->setAttributeNS($xmlns[$namespace], $attribute, $value);
         }
         else {
           throw new AgivException(sprintf('Namespace "%s" is not defined.', $namespace));
@@ -96,12 +96,12 @@ abstract class AgivSTSBase {
 
     // Add additional namespaces if present.
     foreach ($namespaces as $namespace) {
-      if (self::XMLNS[$namespace] !== NULL) {
+      if (isset($xmlns[$namespace]) !== NULL) {
         $ns_name = 'xmlns';
         if (!empty($namespace)) {
           $ns_name .= ':' . $namespace;
         }
-        $element->setAttributeNS('http://www.w3.org/2000/xmlns/', $ns_name, self::XMLNS[$namespace]);
+        $element->setAttributeNS('http://www.w3.org/2000/xmlns/', $ns_name, $xmlns[$namespace]);
       }
       else {
         throw new AgivException(sprintf('Namespace "%s" is not defined.', $namespace));

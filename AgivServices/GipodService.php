@@ -81,7 +81,7 @@ class GipodService extends ServiceDocument {
   public function __construct($data = array()) {
     // Apply defaults.
     foreach (self::CONSTRUCTOR_DEFAULTS as $key => $value) {
-      if (is_null($data[$key])) {
+      if (!isset($data[$key])) {
         $data[$key] = $value;
       }
     }
@@ -103,6 +103,11 @@ class GipodService extends ServiceDocument {
     if (!empty($missing)) {
       throw new AgivException('Gipod object variables missing: ' . implode(', ', $missing));
     }
+
+    if (isset($this->parameters) && !is_array($this->parameters)) {
+      throw new AgivException(sprintf('Gipod method parameters must be an array, %s given.', gettype($this->parameters)));
+    }
+
   }
 
   /**
@@ -144,7 +149,9 @@ class GipodService extends ServiceDocument {
 
     $this->buildRequest();
 
-    $client = new Client(['timeout' => $GLOBALS['agiv_library_settings']['call_timeout']]);
+    $client = new Client([
+      'timeout' => isset($GLOBALS['agiv_library_settings']) ? $GLOBALS['agiv_library_settings']['call_timeout'] : 15,
+    ]);
 
     $options = [
       'headers' => [
@@ -184,11 +191,13 @@ class GipodService extends ServiceDocument {
       return $this->processOutput($bypass_paths);
     }
     catch (AgivException $e) {
-      if ($try < $GLOBALS['agiv_library_settings']['max_service_attempts']) {
+      $ntries = isset($GLOBALS['agiv_library_settings']) ? $GLOBALS['agiv_library_settings']['max_service_attempts'] : 1;
+
+      if ($try < $ntries) {
         $try++;
         // Reload token from STS.
         $this->agivSecurityToken->load('gipod', TRUE);
-        $this->call($action, $try);
+        $this->call($action, $parameters, $bypass_paths, $try);
       }
       else {
         $e->faultData['attempts'] = $try;
@@ -201,7 +210,6 @@ class GipodService extends ServiceDocument {
    * Implements __call magic method to call gipod service method.
    */
   public function __call($name, $arguments = []) {
-
     if (!isset($arguments[0])) {
       $arguments[0] = [];
     }
@@ -267,12 +275,13 @@ class GipodService extends ServiceDocument {
   protected function prepareXmlBody(DOMElement $body) {
     $element = $this->xml->createElementNS(self::XMLNS_DEFAULT, $this->action);
     $body->appendChild($element);
+    $param_ns = self::PARAM_NAMESPACES;
 
-    if (!empty($this->parameters)) {
+    if (!empty($this->parameters) && is_array($this->parameters)) {
       $request = $this->addXmlElementNS($element, self::XMLNS_DEFAULT, 'request', NULL, [], ['b', 'i']);
       foreach ($this->parameters as $name => $value) {
-        if (self::PARAM_NAMESPACES[$name] !== NULL) {
-          $namespaces = self::PARAM_NAMESPACES[$name];
+        if (isset($param_ns[$name])) {
+          $namespaces = $param_ns[$name];
         }
         else {
           $namespaces = ['b', 'b'];
@@ -345,7 +354,7 @@ class GipodService extends ServiceDocument {
 
     $resultElement = $this->xml->getElementsByTagNameNS(self::RESULT_XMLNS, $this->action . 'Result')->item(0);
     if ($resultElement) {
-      if (self::ACTION_PATHS[$this->action] !== NULL && !$bypass_paths) {
+      if (array_key_exists($this->action, self::ACTION_PATHS) && !$bypass_paths) {
         $xpath = new DOMXPath($this->xml);
         foreach (self::ACTION_PATHS[$this->action] as $key => $query) {
           $result = $xpath->query($query, $resultElement);

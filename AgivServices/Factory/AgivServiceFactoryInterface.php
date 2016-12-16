@@ -10,6 +10,6 @@ interface AgivServiceFactoryInterface {
   /**
    * Service getter function.
    */
-  public function getService($serviceClass, $data);
+  public static function getService($serviceClass, $data);
 
 }

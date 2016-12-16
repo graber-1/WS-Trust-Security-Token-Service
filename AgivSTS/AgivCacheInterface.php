@@ -10,7 +10,7 @@ interface AgivCacheInterface {
   /**
    * Get cache.
    */
-  public function cacheGet($cache_id, $token);
+  public function cacheGet($cache_id);
 
   /**
    * Set cache.

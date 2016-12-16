@@ -18,7 +18,7 @@ class AgivDefaultCache implements AgivCacheInterface {
   /**
    * Get cache.
    */
-  public function cacheGet($cache_id, $token) {
+  public function cacheGet($cache_id) {
     $filename = 'cache' . (empty($cache_id) ? '' : '_' . $cache_id) . '.dat';
     $path = self::CACHE_PATH . '/' . $filename;
     if (file_exists($path)) {

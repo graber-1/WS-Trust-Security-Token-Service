@@ -14,7 +14,7 @@ class AgivDefaultServiceFactory implements AgivServiceFactoryInterface {
   /**
    * {@inheritdoc}
    */
-  public function getService($serviceClass, $data) {
+  public static function getService($serviceClass, $data) {
     $serviceClass = '\\AgivServices\\' . $serviceClass;
 
     if (class_exists($serviceClass)) {
