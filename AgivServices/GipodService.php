@@ -33,7 +33,14 @@ class GipodService extends ServiceDocument {
   // first value applies to the value element.
   const PARAM_NAMESPACES = [
     'WerkopdrachtStatusIds' => ['b', 'c'],
+    'ManifestatieStatusIds' => ['b', 'c'],
+    'AanwezigheidOpenbaarDomeinTypes' => ['b', 'b'],
     'StatusIds' => ['b', 'c'],
+  ];
+
+  // Parameter types: Sometimes parameter types are not int or string, but special types.
+  const PARAM_TYPES = [
+    'AanwezigheidOpenbaarDomeinTypes' => 'AanwezigheidOpenbaarDomeinType',
   ];
 
   // Action result namespace.
@@ -278,6 +285,8 @@ class GipodService extends ServiceDocument {
     $param_ns = self::PARAM_NAMESPACES;
 
     if (!empty($this->parameters) && is_array($this->parameters)) {
+      //uasort($this->parameters, 'self::alphaSort');
+
       $request = $this->addXmlElementNS($element, self::XMLNS_DEFAULT, 'request', NULL, [], ['b', 'i']);
       foreach ($this->parameters as $name => $value) {
         if (isset($param_ns[$name])) {
@@ -288,6 +297,13 @@ class GipodService extends ServiceDocument {
         }
 
         if (is_array($value)) {
+          if (array_key_exists($name, self::PARAM_TYPES)) {
+            $child_name = $namespaces[1] . ':' . self::PARAM_TYPES[$name];
+          }
+          else {
+            $child_name = $namespaces[1] . ':int';
+          }
+
           if (empty($namespaces[1]) || $namespaces[1] == 'b') {
             $parent_ns = [];
           }
@@ -304,8 +320,8 @@ class GipodService extends ServiceDocument {
             $parent_ns
           );
           foreach ($value as $name => $item) {
-            if (is_int($item)) {
-              $this->addXmlElementNS($arrayElement, $namespaces[1], $namespaces[1] . ':int', $item);
+            if (is_numeric($name)) {
+              $this->addXmlElementNS($arrayElement, $namespaces[1], $child_name, $item);
             }
             else {
               $this->addXmlElementNS($arrayElement, $namespaces[1], $name, $item);
@@ -422,6 +438,13 @@ class GipodService extends ServiceDocument {
       return $output;
     }
     return NULL;
+  }
+
+  /**
+   * Helper sorting function.
+   */
+  public static function alphaSort($x, $y) {
+    return strcasecmp($x['sort_name'], $y['sort_name']);
   }
 
 }
