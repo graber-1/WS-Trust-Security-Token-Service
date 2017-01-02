@@ -165,6 +165,10 @@ class GipodService extends ServiceDocument {
         'Content-Type' => 'application/soap+xml; charset=utf-8',
       ],
       'body' => $this->xmlOutput(),
+      'verify' => FALSE,
+      'curl' => [
+        CURLOPT_SSLVERSION => CURL_SSLVERSION_SSLv3,
+      ],
     ];
 
     try {
@@ -285,7 +289,6 @@ class GipodService extends ServiceDocument {
     $param_ns = self::PARAM_NAMESPACES;
 
     if (!empty($this->parameters) && is_array($this->parameters)) {
-      //uasort($this->parameters, 'self::alphaSort');
 
       $request = $this->addXmlElementNS($element, self::XMLNS_DEFAULT, 'request', NULL, [], ['b', 'i']);
       foreach ($this->parameters as $name => $value) {
