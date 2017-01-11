@@ -72,9 +72,6 @@ class GipodService extends ServiceDocument {
 
   protected $docGuid;
 
-  protected $certPath;
-  protected $pkPath;
-
   // Security token object.
   protected $agivSecurityToken;
 
@@ -272,11 +269,6 @@ class GipodService extends ServiceDocument {
     $this->addXmlElementNS($this->signatureElements['_0'], 'u', 'u:Expires', $times[1]);
 
     // *** Inject security token ***.
-    $data = [
-      'certPath' => $this->certPath,
-      'pkPath' => $this->pkPath,
-    ];
-
     $this->agivSecurityToken->injectToken($this->securityHeader, $this->xml);
   }
 
@@ -352,7 +344,6 @@ class GipodService extends ServiceDocument {
       'xml' => $this->xml,
       'signatureElements' => $this->signatureElements,
       'canonicalMethod' => AgivSTSSignature::EXC_C14N,
-      'pkPath' => $this->pkPath,
     ];
 
     $sigObject = new AgivSTSSignature($params);
