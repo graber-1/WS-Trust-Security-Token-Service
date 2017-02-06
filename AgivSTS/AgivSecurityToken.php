@@ -71,6 +71,18 @@ class AgivSecurityToken extends AgivSTSBase {
   }
 
   /**
+   * Get cipher value.
+   */
+  public function getCipher() {
+    $cipher = $this->xml->getElementsByTagNameNS(self::XMLNS['xenc'], 'CipherValue')->item(1);
+    if ($cipher) {
+      return $cipher->textContent;
+    }
+    return '';
+
+  }
+
+  /**
    * Validate object variables.
    */
   protected function validateVariables() {
