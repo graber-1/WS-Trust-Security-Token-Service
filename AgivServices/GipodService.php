@@ -11,6 +11,7 @@ use AgivSTS\AgivSecurityToken;
 use AgivSTS\AgivSTSSignature;
 use AgivSTS\Exception\AgivException;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException as GuzzleException;
 
 /**
  * Class for accessing Gipod webAPI.
@@ -167,29 +168,20 @@ class GipodService extends ServiceDocument {
         CURLOPT_SSLVERSION => CURL_SSLVERSION_SSLv3,
       ],
     ];
-
     try {
       $response = $client->post($this->url, $options);
       $response_str = (string) $response->getBody();
     }
+    catch (GuzzleException $e) {
+      $response_str = (string) $e->getResponse()->getBody();
+    }
     catch (\Exception $e) {
-      if (method_exists($e, 'getResponse')) {
-        $response = $e->getResponse();
-        if (method_exists($response, 'getBody')) {
-          $response_str = (string) $e->getResponse()->getBody();
-        }
-        else {
-          throw new AgivException($e->getMessage(), [
-            'class' => get_class($this),
-            'method' => $this->action,
-            'reason' => 'Possible: gipod server down or wrong action name.',
-            'code' => 500,
-          ]);
-        }
-      }
-      else {
-        throw new AgivException('Unexpected response.');
-      }
+      throw new AgivException($e->getMessage(), [
+        'class' => get_class($this),
+        'method' => $this->action,
+        'reason' => 'Possible: gipod server down or wrong action name.',
+        'code' => 500,
+      ]);
     }
 
     $this->xml->loadXML($response_str);

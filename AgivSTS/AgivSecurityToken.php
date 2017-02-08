@@ -6,6 +6,7 @@ use GuzzleHttp\Client;
 use SimpleXMLElement;
 use DOMDocument;
 use AgivSTS\Exception\AgivException;
+use GuzzleHttp\Exception\ClientException as GuzzleException;
 
 /**
  * The security token class.
@@ -144,7 +145,7 @@ class AgivSecurityToken extends AgivSTSBase {
       $response = $client->post($this->url, $options);
       $response_str = (string) $response->getBody();
     }
-    catch (\Exception $e) {
+    catch (GuzzleException $e) {
       $response_str = (string) $e->getResponse()->getBody();
     }
 
