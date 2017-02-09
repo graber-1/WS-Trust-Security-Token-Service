@@ -80,6 +80,10 @@ class GipodService extends ServiceDocument {
   protected $securityHeader;
   protected $signatureElements;
 
+  // Access files.
+  protected $pkPath;
+  protected $certPath;
+
   /**
    * Object constructor.
    */
@@ -164,9 +168,6 @@ class GipodService extends ServiceDocument {
       ],
       'body' => $this->xmlOutput(),
       'verify' => FALSE,
-      'curl' => [
-        CURLOPT_SSLVERSION => CURL_SSLVERSION_SSLv3,
-      ],
     ];
     try {
       $response = $client->post($this->url, $options);
