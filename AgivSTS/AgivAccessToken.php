@@ -98,7 +98,7 @@ class AgivAccessToken {
           'Host' => 'oauth.beta.agiv.be',
           'Content-Type' => 'application/x-www-form-urlencoded',
         ],
-        'body' => implode(PHP_EOL . '&', $request_params),
+        'body' => implode('&', $request_params),
       ];
 
       $client = new Client(['timeout' => 15]);
@@ -113,9 +113,18 @@ class AgivAccessToken {
       $token_data = json_decode($response_str);
 
       if (isset($token_data->error)) {
+        if (isset($token_data->error_description)) {
+          $description = $token_data->error_description;
+        }
+        elseif (isset($token_data->error_message)) {
+          $description = $token_data->error_message;
+        }
+        else {
+          $description = 'not provided';
+        }
         throw new AgivException(t('An error occurred when trying to get AGIV access token. Type: @type, Description: @description.', [
           '@type' => $token_data->error,
-          '@description' => isset($token_data->error_description) ? $token_data->error_description : t('not provided'),
+          '@description' => $description,
         ]));
       }
 
