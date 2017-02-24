@@ -55,7 +55,7 @@ class AgivAccessToken {
     }
 
     if (!empty($missing)) {
-      throw new \AgivException('AgivAccessToken object variables missing: ' . implode(', ', $missing));
+      throw new AgivException('AgivAccessToken object variables missing: ' . implode(', ', $missing));
     }
   }
 
