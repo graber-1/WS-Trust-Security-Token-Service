@@ -50,10 +50,6 @@ class GipodService extends ServiceDocument {
   // Result Array element names for result parsing.
   const RESULT_ARRAY_ELEMENTS = ['EnumeratieElement'];
 
-  // Maximum number of attempts to retrieve a new security token and reconnect.
-  // 1: 2 requests (one with cached or new token and 2nd with newly retrieved token).
-  const MAX_ATTEMPTS = 1;
-
   // Action result paths.
   // For a list of methods, refer to:
   // https://gipod.agiv.be/Webservice/help/ME-GipodService.htm.
@@ -65,23 +61,46 @@ class GipodService extends ServiceDocument {
     ],
   ];
 
-  protected $action;
+  /**
+   * Object settings.
+   *
+   * @var settings
+   */
+  protected $settings;
   protected $url;
+  protected $action;
 
-  // Request parameters.
+  /**
+   * Request parameters.
+   *
+   * @var parameters
+   */
   protected $parameters;
 
   protected $docGuid;
 
-  // Security token object.
+  /**
+   * Security token object.
+   *
+   * @var agivSecurityToken
+   */
   protected $agivSecurityToken;
 
-  // Document security header and signature elements.
   protected $securityHeader;
   protected $signatureElements;
 
-  // Access files.
+  /**
+   * Private key path.
+   *
+   * @var pkPath
+   */
   protected $pkPath;
+
+  /**
+   * Certificate path.
+   *
+   * @var certPath
+   */
   protected $certPath;
 
   /**
@@ -150,7 +169,7 @@ class GipodService extends ServiceDocument {
    * @param int $try
    *   Internal use only.
    */
-  public function call($action = FALSE, $parameters = array(), $bypass_paths = FALSE, $try = 0) {
+  public function call($action = FALSE, array $parameters = array(), $bypass_paths = FALSE, $try = 0) {
     if ($action) {
       $this->action = $action;
     }
@@ -159,7 +178,7 @@ class GipodService extends ServiceDocument {
     $this->buildRequest();
 
     $client = new Client([
-      'timeout' => isset($GLOBALS['agiv_library_settings']) ? $GLOBALS['agiv_library_settings']['call_timeout'] : 15,
+      'timeout' => isset($this->settings['call_timeout']) ? $this->settings['call_timeout'] : 15,
     ]);
 
     $options = [
@@ -192,7 +211,7 @@ class GipodService extends ServiceDocument {
       return $this->processOutput($bypass_paths);
     }
     catch (AgivException $e) {
-      $ntries = isset($GLOBALS['agiv_library_settings']) ? $GLOBALS['agiv_library_settings']['max_service_attempts'] : 1;
+      $ntries = isset($this->settings['max_service_attempts']) ? $this->settings['max_service_attempts'] : 1;
 
       if ($try < $ntries) {
         $try++;

@@ -132,7 +132,7 @@ class AgivSecurityToken extends AgivSTSBase {
       'realm' => $this->realm,
     ]);
 
-    $client = new Client(['timeout' => isset($GLOBALS['agiv_library_settings']) ? $GLOBALS['agiv_library_settings']['call_timeout'] : 15]);
+    $client = new Client(['timeout' => isset($this->settings['call_timeout']) ? $this->settings['call_timeout'] : 15]);
 
     $options = [
       'headers' => [

@@ -23,8 +23,20 @@ class AgivDefaultServiceFactory implements AgivServiceFactoryInterface {
         'cacheObject' => new AgivDefaultCache(),
         'certPath' => $data['certPath'],
         'pkPath' => $data['pkPath'],
+        'settings' => [
+          'call_timeout' => 30,
+        ],
       ];
       $data['agivSecurityToken'] = new AgivSecurityToken($stsObjectData);
+
+      // Apply default settings.
+      if (!isset($data['settings'])) {
+        $data['settings'] = [];
+      }
+      $data['settings'] += [
+        'call_timeout' => 30,
+        'max_service_attempts' => 1,
+      ];
 
       return new $serviceClass($data);
     }
