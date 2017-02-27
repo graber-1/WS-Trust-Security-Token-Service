@@ -11,7 +11,7 @@ use AgivSTS\AgivSecurityToken;
 use AgivSTS\AgivSTSSignature;
 use AgivSTS\Exception\AgivException;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException as GuzzleException;
+use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * Class for accessing Gipod webAPI.
@@ -59,6 +59,11 @@ class GipodService extends ServiceDocument {
       'nextRecord' => 'b:NextRecord',
       'data' => 'b:InnameHinder/b:InnameHinderItem',
     ],
+  ];
+
+  // Not found error tags.
+  const NOT_FOUND_TAGS = [
+    'WerkopdrachtNotFound',
   ];
 
   /**
@@ -211,6 +216,9 @@ class GipodService extends ServiceDocument {
       return $this->processOutput($bypass_paths);
     }
     catch (AgivException $e) {
+      if (isset($e->faultData['tag']) && in_array($e->faultData['tag'], self::NOT_FOUND_TAGS)) {
+        throw $e;
+      }
       $ntries = isset($this->settings['max_service_attempts']) ? $this->settings['max_service_attempts'] : 1;
 
       if ($try < $ntries) {

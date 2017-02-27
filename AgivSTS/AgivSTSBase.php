@@ -203,9 +203,11 @@ abstract class AgivSTSBase {
         'reason' => 's:Reason/s:Text',
         'code' => 's:Code/s:Value',
         'subcode' => 's:Code/s:Subcode/s:Value',
+        'tag' => 's:Detail/tp:FaultDetail/tp:Messages/tp:FaultMessage/tp:Tag'
       ];
 
       $xpath = new DOMXpath($this->xml);
+      $xpath->registerNameSpace('tp', 'http://www.agiv.be/ErrorHandling/2010/04');
       foreach ($error_data as $key => $query) {
         $result = $xpath->query($query, $fault);
         if ($result->length) {
@@ -216,7 +218,7 @@ abstract class AgivSTSBase {
         }
       }
       $error_data = ['class' => get_class($this)] + $error_data;
-      throw new AgivException(vsprintf('%s error: %s Code: %s, subcode: %s.', $error_data), $error_data);
+      throw new AgivException(vsprintf('%s error: %s Code: %s, subcode: %s, tag: %s.', $error_data), $error_data);
     }
     return TRUE;
   }
