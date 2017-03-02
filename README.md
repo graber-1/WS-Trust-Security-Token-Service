@@ -17,7 +17,8 @@ DRUPAL 8 WRAPPER
 
 When the module is enabled, we have a test URL: /gipod/test.
 
-Without parameters it attempts to get a security token and call the Gipod service.
+Without parameters it attempts to get a security token
+and call the Gipod service.
 With ?xml=g query parameter it returns the Gipod request xml.
 With other ?xml parameter values it returns the Agiv STS request xml.
 
@@ -31,11 +32,14 @@ ADDITIONAL INFO
 
 Important note:
 
-When executing Gipod methods, parameter order is important and must be the same as on Gipod docs page.
+When executing Gipod methods, parameter order is important
+and must be the same as on Gipod docs page.
 
 
 THANKS TO
 ---------
 
- * Hans Zandbelt and his php-ws-trust-client library (https://github.com/zandbelt/php-ws-trust-client)
- * Rob Richards and his XML Security PHP library (https://github.com/robrichards/xmlseclibs)
+ * Hans Zandbelt and his php-ws-trust-client library
+   (https://github.com/zandbelt/php-ws-trust-client)
+ * Rob Richards and his XML Security PHP library
+   (https://github.com/robrichards/xmlseclibs)

@@ -9,6 +9,11 @@ use \Exception;
  */
 class AgivException extends Exception {
 
+  /**
+   * An array containing additional error data.
+   *
+   * @var array
+   */
   public $faultData;
 
   /**

@@ -11,22 +11,46 @@ use GuzzleHttp\Exception\ClientException as GuzzleException;
  */
 class AgivAccessToken {
 
-  // Cache object.
+  /**
+   * Cache object.
+   *
+   * @var \AgivSTS\AgivCacheInterface
+   */
   protected $cache;
 
-  // Cache ID.
+  /**
+   * Cache ID.
+   *
+   * @var string
+   */
   protected $cid;
 
-  // Client ID.
+  /**
+   * Client ID.
+   *
+   * @var string
+   */
   protected $clientId;
 
-  // Client secret.
+  /**
+   * Client secret.
+   *
+   * @var string
+   */
   protected $clientSecret;
 
-  // Redirect URI.
+  /**
+   * Redirect URI.
+   *
+   * @var string
+   */
   protected $redirectUri;
 
-  // Authorization code.
+  /**
+   * Authorization code.
+   *
+   * @var string
+   */
   protected $code;
 
   /**

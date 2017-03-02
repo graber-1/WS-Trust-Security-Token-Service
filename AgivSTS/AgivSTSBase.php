@@ -2,8 +2,6 @@
 
 namespace AgivSTS;
 
-use DOMDocument;
-use DOMElement;
 use DOMXpath;
 use AgivSTS\Exception\AgivException;
 
@@ -27,7 +25,11 @@ abstract class AgivSTSBase {
     '' => 'http://www.w3.org/2000/09/xmldsig#',
   ];
 
-  // Xml DOMDocument Object.
+  /**
+   * Xml DOMDocument Object.
+   *
+   * @var DOMDocument
+   */
   protected $xml;
 
   /**
@@ -111,7 +113,9 @@ abstract class AgivSTSBase {
   }
 
   /**
-   * Helper function to create xml element with optional attributes and content and append it.
+   * Helper function.
+   *
+   * Creates an xml element with optional attributes and content and append it.
    */
   protected function addXmlElement($parent, $name, $content = NULL, $attributes = []) {
     $element = $this->prepareXmlElement($name, $content, $attributes);
@@ -120,7 +124,10 @@ abstract class AgivSTSBase {
   }
 
   /**
-   * Helper function to create namespaced xml element with optional attributes and content and append it.
+   * Helper function.
+   *
+   * Creates namespaced xml element with optional
+   * attributes and content and append it.
    */
   protected function addXmlElementNs($parent, $namespace, $name, $content = NULL, $attributes = [], $namespaces = []) {
     $element = $this->prepareXmlElementNs($namespace, $name, $content, $attributes, $namespaces);
@@ -129,7 +136,10 @@ abstract class AgivSTSBase {
   }
 
   /**
-   * Helper function to create xml element with optional attributes and content and add it before the specified element.
+   * Helper function.
+   *
+   * Creates xml element with optional
+   * attributes and content and add it before the specified element.
    */
   protected function addXmlBefore($parent, $next, $name, $content = NULL, $attributes = []) {
     $element = $this->prepareXmlElement($name, $content, $attributes);
@@ -138,7 +148,10 @@ abstract class AgivSTSBase {
   }
 
   /**
-   * Helper function to create namespaced xml element with optional attributes and content and add it before the specified element.
+   * Helper function.
+   *
+   * Creates namespaced xml element with optional
+   * attributes and content and add it before the specified element.
    */
   protected function addXmlBeforeNs($parent, $next, $namespace, $name, $content = NULL, $attributes = []) {
     $element = $this->prepareXmlElementNs($namespace, $name, $content, $attributes);
@@ -203,7 +216,7 @@ abstract class AgivSTSBase {
         'reason' => 's:Reason/s:Text',
         'code' => 's:Code/s:Value',
         'subcode' => 's:Code/s:Subcode/s:Value',
-        'tag' => 's:Detail/tp:FaultDetail/tp:Messages/tp:FaultMessage/tp:Tag'
+        'tag' => 's:Detail/tp:FaultDetail/tp:Messages/tp:FaultMessage/tp:Tag',
       ];
 
       $xpath = new DOMXpath($this->xml);

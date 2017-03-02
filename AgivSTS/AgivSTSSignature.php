@@ -2,7 +2,6 @@
 
 namespace AgivSTS;
 
-use DOMElement;
 use AgivSTS\Exception\AgivException;
 
 /**
@@ -12,7 +11,9 @@ use AgivSTS\Exception\AgivException;
  */
 class AgivSTSSignature extends AgivSTSBase {
 
-  // Class constants.
+  /*
+   * Class constants.
+   */
 
   // Algorithms.
   const SHA1 = 'http://www.w3.org/2000/09/xmldsig#sha1';
@@ -32,25 +33,47 @@ class AgivSTSSignature extends AgivSTSBase {
   const TOKEN_VALUE_TYPE = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3';
   const TOKEN_ENCODING_TYPE = 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary';
 
-  // Signature elements.
+  /**
+   * Signature elements.
+   *
+   * @var array
+   *   An array of DOMElements
+   */
   protected $signatureElements;
 
-  // Canonization method.
+  /**
+   * Canonization method.
+   *
+   * @var string
+   */
   protected $canonicalMethod;
 
-  // Certificate path.
+  /**
+   * Certificate path.
+   *
+   * @var string
+   */
   protected $certPath;
 
-  // Private key path.
+  /**
+   * Private key path.
+   *
+   * @var string
+   */
   protected $pkPath;
 
-  // Private key.
-  protected $pk;
-
-  // Passphrase.
+  /**
+   * Passphrase.
+   *
+   * @var string
+   */
   protected $passphrase;
 
-  // BinarySecurityToken ID.
+  /**
+   * BinarySecurityToken ID.
+   *
+   * @var string
+   */
   protected $securityTokenId;
 
   /**
@@ -118,7 +141,7 @@ class AgivSTSSignature extends AgivSTSBase {
       if (!empty($this->certPath)) {
         $token_ref = $this->addXmlElementNs($keyInfoElement, 'o', 'o:SecurityTokenReference');
         $this->addXmlElementNs($token_ref, 'o', 'o:Reference', NULL, [
-          'URI' => '#' . $this->securityTokenId
+          'URI' => '#' . $this->securityTokenId,
         ]);
       }
       else {

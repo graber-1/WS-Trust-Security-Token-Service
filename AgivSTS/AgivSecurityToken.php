@@ -3,7 +3,6 @@
 namespace AgivSTS;
 
 use GuzzleHttp\Client;
-use SimpleXMLElement;
 use DOMDocument;
 use AgivSTS\Exception\AgivException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
@@ -24,10 +23,18 @@ class AgivSecurityToken extends AgivSTSBase {
 
   protected $lifetime;
 
-  // External cache object.
+  /**
+   * External cache object.
+   *
+   * @var \AgivSTS\AgivCacheInterface
+   */
   protected $cacheObject;
 
-  // Boolyean param indicationg if token was retrieved from cache or not.
+  /**
+   * Boolyean param indicationg if token was retrieved from cache or not.
+   *
+   * @var bool
+   */
   protected $cache;
 
   // Defaults.

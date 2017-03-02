@@ -39,7 +39,8 @@ class GipodService extends ServiceDocument {
     'StatusIds' => ['b', 'c'],
   ];
 
-  // Parameter types: Sometimes parameter types are not int or string, but special types.
+  // Parameter types: Sometimes parameter
+  // types are not int or string, but special types.
   const PARAM_TYPES = [
     'AanwezigheidOpenbaarDomeinTypes' => 'AanwezigheidOpenbaarDomeinType',
   ];
@@ -69,7 +70,7 @@ class GipodService extends ServiceDocument {
   /**
    * Object settings.
    *
-   * @var settings
+   * @var array
    */
   protected $settings;
   protected $url;
@@ -78,7 +79,7 @@ class GipodService extends ServiceDocument {
   /**
    * Request parameters.
    *
-   * @var parameters
+   * @var array
    */
   protected $parameters;
 
@@ -87,7 +88,7 @@ class GipodService extends ServiceDocument {
   /**
    * Security token object.
    *
-   * @var agivSecurityToken
+   * @var \AgivSTS\AgivSecurityToken
    */
   protected $agivSecurityToken;
 
@@ -97,14 +98,14 @@ class GipodService extends ServiceDocument {
   /**
    * Private key path.
    *
-   * @var pkPath
+   * @var string
    */
   protected $pkPath;
 
   /**
    * Certificate path.
    *
-   * @var certPath
+   * @var string
    */
   protected $certPath;
 

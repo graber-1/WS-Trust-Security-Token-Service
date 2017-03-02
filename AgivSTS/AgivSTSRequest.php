@@ -4,7 +4,6 @@ namespace AgivSTS;
 
 use DOMDocument;
 use DOMElement;
-use DOMXpath;
 use AgivSTS\Exception\AgivException;
 
 /**
@@ -34,31 +33,68 @@ class AgivSTSRequest extends ServiceDocument {
    * Class properties.
    */
 
-  // Certificate string.
+  /**
+   * Certificate path.
+   *
+   * @var string
+   */
   protected $certPath;
 
-  // Private key path.
+  /**
+   * Private key path.
+   *
+   * @var string
+   */
   protected $pkPath;
 
-  // Passphrase.
+  /**
+   * Passphrase.
+   *
+   * @var string
+   */
   protected $passphrase;
 
-  // Action performed.
+  /**
+   * Action performed.
+   *
+   * @var string
+   */
   protected $action;
 
-  // Called URL.
+  /**
+   * Called URL.
+   *
+   * @var string
+   */
   protected $url;
 
-  // Request realm.
+  /**
+   * Request realm.
+   *
+   * @var string
+   */
   protected $realm;
 
-  // Document guid.
+  /**
+   * Document guid.
+   *
+   * @var string
+   */
   protected $docGuid;
 
-  // Document security header element.
+  /**
+   * Document security header element.
+   *
+   * @var DOMElement
+   */
   protected $securityHeader;
 
-  // Signature elements.
+  /**
+   * Signature elements.
+   *
+   * @var array
+   *   An array of DOMElements
+   */
   protected $signatureElements;
 
   /**
