@@ -48,7 +48,7 @@ class AgivDefaultCache implements AgivCacheInterface {
 
       $data = array(
         'lifetime' => $token->get('lifetime'),
-        'xml' => $token->get('xml')->saveXML(),
+        'xml' => $token->get('rawData'),
       );
       $result = file_put_contents($path, serialize($data));
     }

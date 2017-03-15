@@ -24,6 +24,13 @@ class AgivSecurityToken extends AgivSTSBase {
   protected $lifetime;
 
   /**
+   * Raw STS service output.
+   *
+   * @var string
+   */
+  protected $rawData;
+
+  /**
    * External cache object.
    *
    * @var \AgivSTS\AgivCacheInterface
@@ -79,15 +86,17 @@ class AgivSecurityToken extends AgivSTSBase {
   }
 
   /**
-   * Get cipher value.
+   * Get SAML assertion XML string.
    */
-  public function getCipher() {
-    $cipher = $this->xml->getElementsByTagNameNS(self::XMLNS['xenc'], 'CipherValue')->item(1);
-    if ($cipher) {
-      return $cipher->textContent;
+  public function getAssertion() {
+    $token = $this->xml->getElementsByTagNameNS(self::XMLNS['trust'], 'RequestSecurityTokenResponse')->item(0);
+    if ($token) {
+      $newDoc = new DOMDocument();
+      $importedNode = $newDoc->importNode($token, TRUE);
+      $newDoc->appendChild($importedNode);
+      return $newDoc->saveXML();
     }
     return '';
-
   }
 
   /**
@@ -150,13 +159,13 @@ class AgivSecurityToken extends AgivSTSBase {
 
     try {
       $response = $client->post($this->url, $options);
-      $response_str = (string) $response->getBody();
+      $this->rawData = (string) $response->getBody();
     }
     catch (GuzzleException $e) {
-      $response_str = (string) $e->getResponse()->getBody();
+      $this->rawData = (string) $e->getResponse()->getBody();
     }
 
-    $this->xml->loadXML($response_str);
+    $this->xml->loadXML($this->rawData);
     if ($this->checkResponse()) {
       $this->parseResponse();
       return TRUE;
@@ -194,7 +203,8 @@ class AgivSecurityToken extends AgivSTSBase {
     if (is_object($this->cacheObject) && method_exists($this->cacheObject, 'cacheGet')) {
       if ($data = $this->cacheObject->cacheGet($cache_id)) {
         $this->lifetime = $data['lifetime'];
-        $this->xml->loadXML($data['xml']);
+        $this->rawData = $data['xml'];
+        $this->xml->loadXML($this->rawData);
         $this->cache = TRUE;
         return TRUE;
       }

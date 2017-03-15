@@ -26,6 +26,13 @@ class AgivAccessToken {
   protected $cid;
 
   /**
+   * Token service URL.
+   *
+   * @var string
+   */
+  protected $url;
+
+  /**
    * Client ID.
    *
    * @var string
@@ -72,7 +79,7 @@ class AgivAccessToken {
    */
   public function validate() {
     $missing = [];
-    foreach (['cache', 'clientId', 'clientSecret', 'redirectUri'] as $variable_name) {
+    foreach (['cache', 'url', 'clientId', 'clientSecret', 'redirectUri'] as $variable_name) {
       if (empty($this->$variable_name)) {
         $missing[] = $variable_name;
       }
@@ -128,7 +135,7 @@ class AgivAccessToken {
       $client = new Client(['timeout' => 15]);
 
       try {
-        $response = $client->request('POST', 'https://oauth.beta.agiv.be/authorization/ws/oauth/v2/token/', $options);
+        $response = $client->request('POST', $this->url, $options);
         $response_str = (string) $response->getBody();
       }
       catch (GuzzleException $e) {
