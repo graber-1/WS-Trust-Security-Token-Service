@@ -110,9 +110,9 @@ class GipodService extends ServiceDocument {
   protected $certPath;
 
   /**
-   * Object constructor.
+   * {@inheritdoc}
    */
-  public function __construct($data = array()) {
+  public function __construct($data = []) {
     // Apply defaults.
     foreach (self::CONSTRUCTOR_DEFAULTS as $key => $value) {
       if (!isset($data[$key])) {
@@ -174,6 +174,9 @@ class GipodService extends ServiceDocument {
    *   and entire result structure will be returned.
    * @param int $try
    *   Internal use only.
+   *
+   * @return mixed
+   *   Array of returned data or XML string if data couldn't be parsed.
    */
   public function call($action = FALSE, array $parameters = array(), $bypass_paths = FALSE, $try = 0) {
     if ($action) {
@@ -237,8 +240,16 @@ class GipodService extends ServiceDocument {
 
   /**
    * Implements __call magic method to call gipod service method.
+   *
+   * @param string $name
+   *   Method to call.
+   * @param array $arguments
+   *   Arguments of the caller.
+   *
+   * @return mixed
+   *   Return of the call method. @see \AgivServices\GipodService::call.
    */
-  public function __call($name, $arguments = []) {
+  public function __call($name, array $arguments = []) {
     if (!isset($arguments[0])) {
       $arguments[0] = [];
     }
@@ -249,14 +260,14 @@ class GipodService extends ServiceDocument {
   }
 
   /**
-   * Test function to get xml string.
+   * Test function to get the current xml string.
    */
   public function xmlOutput() {
     return $this->xml->saveXML();
   }
 
   /**
-   * Prepare document header.
+   * {@inheritdoc}
    */
   protected function prepareXmlHeader(DOMElement $header) {
     // Action element.
@@ -294,7 +305,7 @@ class GipodService extends ServiceDocument {
   }
 
   /**
-   * Prepare document body.
+   * {@inheritdoc}
    */
   protected function prepareXmlBody(DOMElement $body) {
     $element = $this->xml->createElementNS(self::XMLNS_DEFAULT, $this->action);
@@ -379,6 +390,13 @@ class GipodService extends ServiceDocument {
 
   /**
    * Process output data for Gipod methods.
+   *
+   * @param bool $bypass_paths
+   *   Should action paths defined as the class
+   *   constant be bypassed and the entire data object returned?
+   *
+   * @return mixed
+   *   Data array or XML string if failed to find the result element.
    */
   private function processOutput($bypass_paths = FALSE) {
     $output = [];
@@ -409,6 +427,12 @@ class GipodService extends ServiceDocument {
 
   /**
    * Helper function to recursively return values of DOMNode and its children.
+   *
+   * @param \DOMNode $node
+   *   The node.
+   *
+   * @return mixed
+   *   The value of the node or array of values if the node had children.
    */
   protected function getNodeValue(DOMNode $node) {
 
@@ -453,13 +477,6 @@ class GipodService extends ServiceDocument {
       return $output;
     }
     return NULL;
-  }
-
-  /**
-   * Helper sorting function.
-   */
-  public static function alphaSort($x, $y) {
-    return strcasecmp($x['sort_name'], $y['sort_name']);
   }
 
 }

@@ -2,6 +2,8 @@
 
 namespace AgivSTS;
 
+use \DOMNode;
+use \DOMElement;
 use AgivSTS\Exception\AgivException;
 
 /**
@@ -10,10 +12,6 @@ use AgivSTS\Exception\AgivException;
  * Based on robrichards/xmlseclibs.
  */
 class AgivSTSSignature extends AgivSTSBase {
-
-  /*
-   * Class constants.
-   */
 
   // Algorithms.
   const SHA1 = 'http://www.w3.org/2000/09/xmldsig#sha1';
@@ -78,6 +76,9 @@ class AgivSTSSignature extends AgivSTSBase {
 
   /**
    * Object constructor.
+   *
+   * @var array $data
+   *   Associative array of values to be passed to object parameters.
    */
   public function __construct($data) {
     parent::__construct($data);
@@ -86,8 +87,17 @@ class AgivSTSSignature extends AgivSTSBase {
 
   /**
    * Sign document base function.
+   *
+   * @param \DOMElement $element
+   *   The container element, usually Security in header.
+   * @param \DOMElement $key_info
+   *   Key info to be appended to key info element.
+   * @param string $method
+   *   Signature encryption method. Supported: self::RSA_SHA1, self::HMAC_SHA1.
+   * @param array $parameters
+   *   Additional parameters passed to signature value generator.
    */
-  public function signDocument($element, $key_info = FALSE, $method = self::RSA_SHA1, $parameters = array()) {
+  public function signDocument(DOMElement $element, DOMElement $key_info = NULL, $method = self::RSA_SHA1, array $parameters = []) {
     // Add certificate.
     if (!empty($this->certPath)) {
       $this->addXmlElementNs($element, 'o', 'o:BinarySecurityToken', $this->getCertificateData($this->certPath), [
@@ -135,7 +145,7 @@ class AgivSTSSignature extends AgivSTSBase {
     $this->addXmlElementNs($signature, '', 'SignatureValue', $this->getSignatureValue($signed_info, $method, $parameters));
 
     // Add security key (certificate) info.
-    if (!empty($this->certPath) || $key_info !== FALSE) {
+    if (!empty($this->certPath) || !is_null($key_info)) {
       $keyInfoElement = $this->addXmlElementNs($signature, '', 'KeyInfo');
 
       if (!empty($this->certPath)) {
@@ -152,6 +162,12 @@ class AgivSTSSignature extends AgivSTSBase {
 
   /**
    * Get certificate data.
+   *
+   * @param string $certPath
+   *   Valid path to the certificate file.
+   *
+   * @return string
+   *   Processed certificate string.
    */
   protected function getCertificateData($certPath) {
     if ($cert_contents = file_get_contents($certPath)) {
@@ -179,7 +195,13 @@ class AgivSTSSignature extends AgivSTSBase {
   /**
    * Calculate digest value.
    *
-   * Function from robrichards/xmlseclibs /src/XMLSecurityDSig.php.
+   * @var string $digestAlgorithm
+   *   Digest algorithm to be used.
+   * @var string $data
+   *   The data to be hashed.
+   *
+   * @return string
+   *   The hashed data value.
    */
   public function calculateDigest($digestAlgorithm, $data) {
     switch ($digestAlgorithm) {
@@ -212,8 +234,19 @@ class AgivSTSSignature extends AgivSTSBase {
 
   /**
    * Get signature value.
+   *
+   * @var \DOMNode $sigInfoElement
+   *   The element that needs to be signed.
+   * @var string $method
+   *   Signature encryption method,
+   *   currently supported: self::RSA_SHA1, self::HMAC_SHA1.
+   * @var array $parameters
+   *   Additional parameters passed to the algorithm.
+   *
+   * @return string
+   *   The generated signature value.
    */
-  protected function getSignatureValue($sigInfoElement, $method, $parameters) {
+  protected function getSignatureValue(DOMNode $sigInfoElement, $method, array $parameters = []) {
     $data = $sigInfoElement->C14N(TRUE, FALSE);
 
     switch ($method) {
@@ -249,8 +282,16 @@ class AgivSTSSignature extends AgivSTSBase {
    * Currently not used, may come in handy when
    * XML DOMDocument is not constructed properly with use of namespaces.
    * May also be faster than C14N method. Leaving for future consideration.
+   *
+   * @param \DOMNode $node
+   *   The node that will be canonicalized.
+   * @param array $used_namespaces
+   *   Namespaces used within the node. Internal use only.
+   *
+   * @return string
+   *   The canonicalized node.
    */
-  protected function exclusiveCanonicalization($node, $used_namespaces = []) {
+  protected function exclusiveCanonicalization(DOMNode $node, array $used_namespaces = []) {
 
     // Find all possible namespaces in the node.
     $namespaces = [];
@@ -332,7 +373,7 @@ class AgivSTSSignature extends AgivSTSBase {
   }
 
   /**
-   * Helper sorting function.
+   * Helper sorting function for exclusiveCanonicalization.
    */
   public static function alphaSort($x, $y) {
     return strcasecmp($x['sort_name'], $y['sort_name']);

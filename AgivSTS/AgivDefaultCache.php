@@ -16,7 +16,7 @@ class AgivDefaultCache implements AgivCacheInterface {
   const CACHE_PATH = __DIR__ . '/../cache';
 
   /**
-   * Get cache.
+   * {@inheritdoc}
    */
   public function cacheGet($cache_id) {
     $filename = 'cache' . (empty($cache_id) ? '' : '_' . $cache_id) . '.dat';
@@ -31,7 +31,7 @@ class AgivDefaultCache implements AgivCacheInterface {
   }
 
   /**
-   * Set cache.
+   * {@inheritdoc}
    */
   public function cacheSet($cache_id, $token) {
 

@@ -11,15 +11,10 @@ use AgivSTS\Exception\AgivException;
  */
 class AgivSTSRequest extends ServiceDocument {
 
-  /**
-   * Class constants.
-   */
-
-  // Defaults.
+  // Constructor defaults.
   const CONSTRUCTOR_DEFAULTS = [
     'passphrase' => '',
     'action' => 'Issue',
-    'realm' => 'urn:agiv.be/gipod',
   ];
 
   // Header constants.
@@ -99,8 +94,11 @@ class AgivSTSRequest extends ServiceDocument {
 
   /**
    * Object constructor.
+   *
+   * @var array $data
+   *   Associative array of values to be passed to object parameters.
    */
-  public function __construct($data) {
+  public function __construct(array $data) {
     // Apply defaults.
     foreach (self::CONSTRUCTOR_DEFAULTS as $key => $value) {
       if (is_null($data[$key])) {
@@ -141,6 +139,9 @@ class AgivSTSRequest extends ServiceDocument {
 
   /**
    * Prepare XML header.
+   *
+   * @param \DOMElement $header
+   *   The header element of the document.
    */
   protected function prepareXmlHeader(DOMElement $header) {
     $xml = &$this->xml;
@@ -180,6 +181,9 @@ class AgivSTSRequest extends ServiceDocument {
 
   /**
    * Prepare XML body.
+   *
+   * @param \DOMElement $body
+   *   The body element of the document.
    */
   protected function prepareXmlBody(DOMElement $body) {
     $request_element = $this->addXmlElementNs($body, 'trust', 'trust:RequestSecurityToken', NULL);
@@ -206,7 +210,6 @@ class AgivSTSRequest extends ServiceDocument {
 
     $sigObject = new AgivSTSSignature($params);
     $sigObject->signDocument($this->securityHeader);
-
   }
 
 }

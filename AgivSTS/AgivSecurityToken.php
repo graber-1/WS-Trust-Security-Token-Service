@@ -12,15 +12,61 @@ use GuzzleHttp\Exception\ClientException as GuzzleException;
  */
 class AgivSecurityToken extends AgivSTSBase {
 
+  /**
+   * Primary key file path.
+   *
+   * @var string
+   */
   protected $pkPath;
+
+  /**
+   * Certificate file path.
+   *
+   * @var string
+   */
   protected $certPath;
+
+  /**
+   * Secutity token service URL.
+   *
+   * @var string
+   */
   protected $url;
+
+  /**
+   * Service realm.
+   *
+   * @var string
+   */
   protected $realm;
+
+  /**
+   * Action performed, default: Issue.
+   *
+   * @var string
+   */
   protected $action;
+
+  /**
+   * PK passphrase.
+   *
+   * @var string
+   */
   protected $passphrase;
 
+  /**
+   * Document xml object.
+   *
+   * @var \DOMDocument
+   */
   protected $xml;
 
+  /**
+   * Acquired token lifetime.
+   *
+   * @var array
+   *   Elements: Created, Expires timestamps.
+   */
   protected $lifetime;
 
   /**
@@ -60,7 +106,10 @@ class AgivSecurityToken extends AgivSTSBase {
   ];
 
   /**
-   * Constructor.
+   * Initialize object and create its xml document.
+   *
+   * @param array $data
+   *   Associative array of object property values.
    */
   public function __construct(array $data) {
     // Apply defaults.
@@ -78,6 +127,12 @@ class AgivSecurityToken extends AgivSTSBase {
 
   /**
    * Getter function.
+   *
+   * @param string $property
+   *   The name of the retrieved property.
+   *
+   * @return mixed
+   *   Value of the property or null.
    */
   public function get($property) {
     if (isset($this->$property)) {
@@ -87,6 +142,9 @@ class AgivSecurityToken extends AgivSTSBase {
 
   /**
    * Get SAML assertion XML string.
+   *
+   * @return string
+   *   Security token response XML string.
    */
   public function getAssertion() {
     $token = $this->xml->getElementsByTagNameNS(self::XMLNS['trust'], 'RequestSecurityTokenResponse')->item(0);
@@ -170,7 +228,7 @@ class AgivSecurityToken extends AgivSTSBase {
       $this->parseResponse();
       return TRUE;
     }
-
+    return FALSE;
   }
 
   /**
@@ -189,6 +247,9 @@ class AgivSecurityToken extends AgivSTSBase {
 
   /**
    * Set cache.
+   *
+   * @param string $cache_id
+   *   Cache identifier.
    */
   protected function cacheSet($cache_id = '') {
     if (is_object($this->cacheObject) && method_exists($this->cacheObject, 'cacheSet')) {
@@ -198,6 +259,12 @@ class AgivSecurityToken extends AgivSTSBase {
 
   /**
    * Get cache.
+   *
+   * @param string $cache_id
+   *   Cache identifier.
+   *
+   * @return bool
+   *   Did the attempt to load the token from cache succeeded?
    */
   protected function cacheGet($cache_id = '') {
     if (is_object($this->cacheObject) && method_exists($this->cacheObject, 'cacheGet')) {
@@ -215,6 +282,11 @@ class AgivSecurityToken extends AgivSTSBase {
 
   /**
    * Inject security token to XML document.
+   *
+   * @param \DOMElement $element
+   *   The element where the security token should be appended.
+   * @param \DOMDocument $document
+   *   The parent document of $element parameter.
    */
   public function injectToken(\DOMElement $element, \DOMDocument $document) {
     $encryptedData = $this->xml->getElementsByTagNameNS(self::XMLNS['xenc'], 'EncryptedData')->item(0);
@@ -232,6 +304,9 @@ class AgivSecurityToken extends AgivSTSBase {
 
   /**
    * Get token reference element.
+   *
+   * @return \DOMElement
+   *   The token reference element.
    */
   public function getReference() {
     $reference = $this->xml->getElementsByTagNameNS(self::XMLNS['o'], 'SecurityTokenReference')->item(1);
@@ -240,6 +315,9 @@ class AgivSecurityToken extends AgivSTSBase {
 
   /**
    * Get binary secret.
+   *
+   * @return string
+   *   Binary secret string used for hash HMAC method.
    */
   public function getBinarySecret() {
     $secret = $this->xml->getElementsByTagNameNS(self::XMLNS['trust'], 'BinarySecret')->item(0);
@@ -251,6 +329,9 @@ class AgivSecurityToken extends AgivSTSBase {
 
   /**
    * Test function to get xml string.
+   *
+   * Allows to check xml of the request to STS
+   * service without making the request.
    */
   public function retrieveXml() {
     $agivSTSRequest = new AgivSTSRequest([

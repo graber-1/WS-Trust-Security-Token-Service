@@ -92,6 +92,12 @@ class AgivAccessToken {
 
   /**
    * Get token.
+   *
+   * @param bool $no_cache
+   *   Should token cache be refreshed even if not expired?
+   *
+   * @return string
+   *   Access token string.
    */
   public function getToken($no_cache = FALSE) {
     $this->validate();

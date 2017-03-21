@@ -3,6 +3,7 @@
 namespace AgivSTS;
 
 use DOMXpath;
+use DOMNode;
 use AgivSTS\Exception\AgivException;
 
 /**
@@ -10,7 +11,7 @@ use AgivSTS\Exception\AgivException;
  */
 abstract class AgivSTSBase {
 
-  // Namespaces.
+  // XML namespaces used in STS related documents.
   const XMLNS = [
     's' => 'http://www.w3.org/2003/05/soap-envelope',
     'a' => 'http://www.w3.org/2005/08/addressing',
@@ -34,8 +35,13 @@ abstract class AgivSTSBase {
 
   /**
    * General constructor.
+   *
+   * Assigns argument array values to created object properties.
+   *
+   * @param array $data
+   *   Associative array of object property values.
    */
-  public function __construct($data) {
+  public function __construct(array $data) {
     // Set object properties.
     foreach ($this as $property => $value) {
       if (!empty($data[$property])) {
@@ -46,15 +52,28 @@ abstract class AgivSTSBase {
 
   /**
    * Output xml as a string.
+   *
+   * @return string
+   *   The xml string.
    */
   public function xmlOutput() {
     return $this->xml->saveXML();
   }
 
   /**
-   * Prepare element.
+   * Prepare XML element.
+   *
+   * @param string $name
+   *   The name of the element.
+   * @param string $content
+   *   The value of the element.
+   * @param array $attributes
+   *   Associative array of element attributes.
+   *
+   * @return \DOMElement
+   *   The created element.
    */
-  protected function prepareXmlElement($name, $content = NULL, $attributes = []) {
+  protected function prepareXmlElement($name, $content = NULL, array $attributes = []) {
     $xml = &$this->xml;
     $element = $xml->createElement($name, $content);
     foreach ($attributes as $attribute => $value) {
@@ -66,8 +85,22 @@ abstract class AgivSTSBase {
 
   /**
    * Prepare namespaced element.
+   *
+   * @param string $namespace
+   *   Namespace prefix if defined in self:XMLNS or URI.
+   * @param string $name
+   *   The name of the element.
+   * @param string $content
+   *   The value of the element.
+   * @param array $attributes
+   *   Associative array of element attributes.
+   * @param array $namespaces
+   *   Array of namespace prefixes or URIs.
+   *
+   * @return \DOMElement
+   *   The created element.
    */
-  protected function prepareXmlElementNs($namespace, $name, $content = NULL, $attributes = [], $namespaces = []) {
+  protected function prepareXmlElementNs($namespace, $name, $content = NULL, array $attributes = [], array $namespaces = []) {
     $xml = &$this->xml;
     if (array_key_exists($namespace, self::XMLNS)) {
       $element = $xml->createElementNS(self::XMLNS[$namespace], $name, $content);
@@ -116,8 +149,15 @@ abstract class AgivSTSBase {
    * Helper function.
    *
    * Creates an xml element with optional attributes and content and append it.
+   * For the rest of the parameters @see prepereXmlElement.
+   *
+   * @param \DOMNode $parent
+   *   The element to which the created element should be appended.
+   *
+   * @return \DOMNode
+   *   The created element.
    */
-  protected function addXmlElement($parent, $name, $content = NULL, $attributes = []) {
+  protected function addXmlElement(DOMNode $parent, $name, $content = NULL, $attributes = []) {
     $element = $this->prepareXmlElement($name, $content, $attributes);
     $parent->appendChild($element);
     return $element;
@@ -127,9 +167,16 @@ abstract class AgivSTSBase {
    * Helper function.
    *
    * Creates namespaced xml element with optional
-   * attributes and content and append it.
+   * attributes and content and appends it to $parent.
+   * For the rest of the parameters @see prepereXmlElementNs.
+   *
+   * @param \DOMNode $parent
+   *   The element to which the created element should be appended.
+   *
+   * @return \DOMNode
+   *   The created element.
    */
-  protected function addXmlElementNs($parent, $namespace, $name, $content = NULL, $attributes = [], $namespaces = []) {
+  protected function addXmlElementNs(DOMNode $parent, $namespace, $name, $content = NULL, $attributes = [], $namespaces = []) {
     $element = $this->prepareXmlElementNs($namespace, $name, $content, $attributes, $namespaces);
     $parent->appendChild($element);
     return $element;
@@ -139,9 +186,16 @@ abstract class AgivSTSBase {
    * Helper function.
    *
    * Creates xml element with optional
-   * attributes and content and add it before the specified element.
+   * attributes and content and adds it before the specified element.
+   * For the rest of the parameters @see addXmlElement.
+   *
+   * @param \DOMNode $next
+   *   The node before which the new element will be inserted.
+   *
+   * @return \DOMNode
+   *   The created element.
    */
-  protected function addXmlBefore($parent, $next, $name, $content = NULL, $attributes = []) {
+  protected function addXmlBefore(DOMNode $parent, DOMNode $next, $name, $content = NULL, $attributes = []) {
     $element = $this->prepareXmlElement($name, $content, $attributes);
     $parent->insertBefore($element, $next);
     return $element;
@@ -152,15 +206,30 @@ abstract class AgivSTSBase {
    *
    * Creates namespaced xml element with optional
    * attributes and content and add it before the specified element.
+   * For the rest of the parameters @see addXmlElementNs.
+   *
+   * @param \DOMNode $next
+   *   The node before which the new element will be inserted.
+   *
+   * @return \DOMNode
+   *   The created element.
    */
-  protected function addXmlBeforeNs($parent, $next, $namespace, $name, $content = NULL, $attributes = []) {
+  protected function addXmlBeforeNs(DOMNode $parent, DOMNode $next, $namespace, $name, $content = NULL, array $attributes = []) {
     $element = $this->prepareXmlElementNs($namespace, $name, $content, $attributes);
     $parent->insertBefore($element, $next);
     return $element;
   }
 
   /**
-   * Get time in correct format.
+   * Get datetime in correct format.
+   *
+   * @param int $microtime
+   *   Time to convert.
+   * @param int $offset
+   *   Second time offset.
+   *
+   * @return array
+   *   Array of 2 formatted date strings.
    */
   protected function getTimestamp($microtime = NULL, $offset = 300) {
     if (!isset($microtime)) {
@@ -184,6 +253,14 @@ abstract class AgivSTSBase {
 
   /**
    * Helper function to generate guid.
+   *
+   * @param string $prefix
+   *   String to prepend to guid.
+   * @param string $suffix
+   *   String to append to guid.
+   *
+   * @return string
+   *   The generated guid.
    */
   public static function generateGuid($prefix = 'urn:uuid:', $suffix = '') {
     $uuid = md5(uniqid(mt_rand(), TRUE));
@@ -208,6 +285,9 @@ abstract class AgivSTSBase {
 
   /**
    * Parse xml response: error handling.
+   *
+   * @return bool
+   *   TRUE if the output has no errors, throws an exception otherwise.
    */
   protected function checkResponse() {
     $fault = $this->xml->getElementsByTagNameNS(self::XMLNS['s'], 'Fault')->item(0);
