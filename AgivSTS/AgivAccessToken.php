@@ -95,11 +95,13 @@ class AgivAccessToken {
    *
    * @param bool $no_cache
    *   Should token cache be refreshed even if not expired?
+   * @param bool $force_refresh
+   *   Should refresh token be used even if token is not expired?
    *
    * @return string
    *   Access token string.
    */
-  public function getToken($no_cache = FALSE) {
+  public function getToken($no_cache = FALSE, $force_refresh = FALSE) {
     $this->validate();
 
     if ($no_cache) {
@@ -120,7 +122,7 @@ class AgivAccessToken {
         'redirect_uri=' . urlencode($this->redirectUri),
       ];
     }
-    elseif ($token_data['lifetime']['Expires'] < $request_time) {
+    elseif ($token_data['lifetime']['Expires'] < $request_time || $force_refresh) {
       $request_params = [
         'grant_type=refresh_token',
         'refresh_token=' . $token_data['refresh_token'],

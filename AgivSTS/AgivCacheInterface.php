@@ -23,9 +23,9 @@ interface AgivCacheInterface {
    *
    * @param string $cache_id
    *   Cache identifier.
-   * @param \AgivSTS\AgivSecurityToken $token
-   *   Agiv security token object.
+   * @param mixed $token
+   *   Agiv security token.
    */
-  public function cacheSet($cache_id, AgivSecurityToken $token);
+  public function cacheSet($cache_id, $token);
 
 }
