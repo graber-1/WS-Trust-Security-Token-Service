@@ -2,7 +2,6 @@
 
 namespace AgivSTS;
 
-use GuzzleHttp\Client;
 use AgivSTS\Exception\AgivException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
 
@@ -61,6 +60,13 @@ class AgivAccessToken {
   protected $code;
 
   /**
+   * Preconfigured HTTP client (Guzzle).
+   *
+   * @var \GuzzleHttp\Client
+   */
+  protected $httpClient;
+
+  /**
    * Object constructor.
    */
   public function __construct(AgivCacheInterface $cache, array $data) {
@@ -79,7 +85,14 @@ class AgivAccessToken {
    */
   public function validate() {
     $missing = [];
-    foreach (['cache', 'url', 'clientId', 'clientSecret', 'redirectUri'] as $variable_name) {
+    foreach ([
+      'cache',
+      'url',
+      'clientId',
+      'clientSecret',
+      'redirectUri',
+      'httpClient',
+    ] as $variable_name) {
       if (empty($this->$variable_name)) {
         $missing[] = $variable_name;
       }
@@ -140,10 +153,8 @@ class AgivAccessToken {
         'body' => implode('&', $request_params),
       ];
 
-      $client = new Client(['timeout' => 15]);
-
       try {
-        $response = $client->request('POST', $this->url, $options);
+        $response = $this->httpClient->request('POST', $this->url, $options);
         $response_str = (string) $response->getBody();
       }
       catch (GuzzleException $e) {

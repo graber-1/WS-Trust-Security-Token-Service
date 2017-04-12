@@ -2,7 +2,6 @@
 
 namespace AgivSTS;
 
-use GuzzleHttp\Client;
 use DOMDocument;
 use AgivSTS\Exception\AgivException;
 use GuzzleHttp\Exception\ClientException as GuzzleException;
@@ -75,6 +74,13 @@ class AgivSecurityToken extends AgivSTSBase {
    * @var string
    */
   protected $rawData;
+
+  /**
+   * Preconfigured HTTP client (Guzzle).
+   *
+   * @var \GuzzleHttp\Client
+   */
+  protected $httpClient;
 
   /**
    * External cache object.
@@ -162,7 +168,7 @@ class AgivSecurityToken extends AgivSTSBase {
    */
   protected function validateVariables() {
     $missing = [];
-    foreach (['action', 'url', 'realm', 'certPath', 'pkPath'] as $variable_name) {
+    foreach (['action', 'url', 'realm', 'certPath', 'pkPath', 'httpClient'] as $variable_name) {
       if (empty($this->{$variable_name})) {
         $missing[] = $variable_name;
       }
@@ -206,7 +212,6 @@ class AgivSecurityToken extends AgivSTSBase {
       'realm' => $this->realm,
     ]);
 
-    $client = new Client(['timeout' => isset($this->settings['call_timeout']) ? $this->settings['call_timeout'] : 15]);
 
     $options = [
       'headers' => [
@@ -216,7 +221,7 @@ class AgivSecurityToken extends AgivSTSBase {
     ];
 
     try {
-      $response = $client->post($this->url, $options);
+      $response = $this->httpClient->post($this->url, $options);
       $this->rawData = (string) $response->getBody();
     }
     catch (GuzzleException $e) {

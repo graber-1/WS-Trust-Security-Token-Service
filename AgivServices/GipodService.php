@@ -10,7 +10,6 @@ use AgivSTS\ServiceDocument;
 use AgivSTS\AgivSecurityToken;
 use AgivSTS\AgivSTSSignature;
 use AgivSTS\Exception\AgivException;
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
 /**
@@ -92,6 +91,13 @@ class GipodService extends ServiceDocument {
    */
   protected $agivSecurityToken;
 
+  /**
+   * Preconfigured HTTP client (Guzzle).
+   *
+   * @var \GuzzleHttp\Client
+   */
+  protected $httpClient;
+
   protected $securityHeader;
   protected $signatureElements;
 
@@ -128,7 +134,7 @@ class GipodService extends ServiceDocument {
    */
   protected function validateVariables() {
     $missing = [];
-    foreach (['action', 'url', 'agivSecurityToken'] as $variable_name) {
+    foreach (['action', 'url', 'agivSecurityToken', 'httpClient'] as $variable_name) {
       if (empty($this->$variable_name)) {
         $missing[] = $variable_name;
       }
@@ -186,10 +192,6 @@ class GipodService extends ServiceDocument {
 
     $this->buildRequest();
 
-    $client = new Client([
-      'timeout' => isset($this->settings['call_timeout']) ? $this->settings['call_timeout'] : 15,
-    ]);
-
     $options = [
       'headers' => [
         'Content-Type' => 'application/soap+xml; charset=utf-8',
@@ -198,7 +200,7 @@ class GipodService extends ServiceDocument {
       'verify' => FALSE,
     ];
     try {
-      $response = $client->post($this->url, $options);
+      $response = $this->httpClient->post($this->url, $options);
       $response_str = (string) $response->getBody();
     }
     catch (GuzzleException $e) {
