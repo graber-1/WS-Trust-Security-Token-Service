@@ -212,7 +212,6 @@ class AgivSecurityToken extends AgivSTSBase {
       'realm' => $this->realm,
     ]);
 
-
     $options = [
       'headers' => [
         'Content-Type' => 'application/soap+xml; charset=utf-8',

@@ -159,7 +159,14 @@ class AgivAccessToken {
       }
       catch (GuzzleException $e) {
         $response_str = (string) $e->getResponse()->getBody();
+        if (empty($response_str)) {
+          throw new AgivException(sprintf('Agiv access token error. Request URI: %s; message: %s', $location, $e->getMessage()));
+        }
       }
+      catch (\Exception $e) {
+        throw new AgivException(sprintf('Agiv access token error. Request URI: %s; message: %s', $location, $e->getMessage()));
+      }
+
       $token_data = json_decode($response_str);
 
       if (isset($token_data->error)) {
