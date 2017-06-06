@@ -4,7 +4,9 @@ INTRODUCTION
 This library is able to get Security tokens from Agiv-STS service
 and use them in service classes.
 
-So far we have one class to access Gipod service.
+Agiv-STS is a WS-Trust based security token service.
+
+So far we have one class to access the Gipod service.
 
 
 ADDITIONAL INFO
@@ -23,3 +25,10 @@ THANKS TO
    (https://github.com/zandbelt/php-ws-trust-client)
  * Rob Richards and his XML Security PHP library
    (https://github.com/robrichards/xmlseclibs)
+
+
+BASIC USAGE
+-----------
+
+Check \AgivServices\Factory\AgivDefaultServiceFactory
+for an example on how to instantiate an Agiv service object.
