@@ -32,6 +32,13 @@ class AgivAccessToken {
   protected $url;
 
   /**
+   * Token service request Host header.
+   *
+   * @var string
+   */
+  protected $host;
+
+  /**
    * Client ID.
    *
    * @var string
@@ -88,6 +95,7 @@ class AgivAccessToken {
     foreach ([
       'cache',
       'url',
+      'host',
       'clientId',
       'clientSecret',
       'redirectUri',
@@ -147,7 +155,7 @@ class AgivAccessToken {
     if (!empty($request_params)) {
       $options = [
         'headers' => [
-          'Host' => 'oauth.beta.agiv.be',
+          'Host' => $this->host,
           'Content-Type' => 'application/x-www-form-urlencoded',
         ],
         'body' => implode('&', $request_params),
