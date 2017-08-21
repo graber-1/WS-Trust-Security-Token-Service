@@ -32,3 +32,9 @@ BASIC USAGE
 
 Check \AgivServices\Factory\AgivDefaultServiceFactory
 for an example on how to instantiate an Agiv service object.
+
+
+SPONSORING
+----------
+
+This work has beens ponsored by the Government of Flanders.
