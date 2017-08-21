@@ -18,12 +18,12 @@ When executing Gipod methods, parameter order is important
 and must be the same as on Gipod docs page.
 
 
-THANKS TO
+REFERENCES
 ---------
 
- * Hans Zandbelt and his php-ws-trust-client library
+ * php-ws-trust-client library by Hans Zandbelt
    (https://github.com/zandbelt/php-ws-trust-client)
- * Rob Richards and his XML Security PHP library
+ * XML Security PHP library by Rob Richards
    (https://github.com/robrichards/xmlseclibs)
 
 
